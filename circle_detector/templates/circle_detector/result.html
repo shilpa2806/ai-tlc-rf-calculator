@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result</title>
+    <link rel="stylesheet" href="path/to/your/styles.css"> <!-- Link to external styles if needed -->
+</head>
+<body>
+    <h1>Annotated Image</h1>
+
+    <!-- Display the uploaded image -->
+    <img src="{{ uploaded_file_url }}" alt="Uploaded Image" style="max-width: 100%; height: auto;">
+
+    <!-- Display the annotated image -->
+    <img src="/media/annotated_image.png" alt="Annotated Image" style="max-width: 100%; height: auto;">
+
+    <h2>Detected Centers (x, y from bottom):</h2>
+    <ul>
+        <!-- Loop through the centers and display each one in a list -->
+        {% for center in centers_with_coords %}
+            <li>{{ center }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Link to upload another image -->
+    <a href="{% url 'upload_image' %}">Upload another image</a>
+</body>
+</html>

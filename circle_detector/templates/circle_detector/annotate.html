@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TLC Image Annotation Tool</title>
+
+<!-- Import Google Icon Font for Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Import Materialize CSS framework for styling -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+<!-- Lab System Theme Styles -->
+<style>
+    :root {
+        /* Lab System Color Palette */
+        --primary-blue: #4A90E2;
+        --primary-blue-dark: #357ABD;
+        --primary-blue-light: #6BA3E8;
+        --secondary-teal: #5BC0DE;
+        --secondary-teal-dark: #46B8DA;
+        --accent-orange: #F0AD4E;
+        --accent-orange-dark: #EC971F;
+        --success-green: #5CB85C;
+        --success-green-dark: #449D44;
+        --danger-red: #D9534F;
+        --danger-red-dark: #C9302C;
+        --warning-yellow: #F0AD4E;
+       
+        /* Neutral Colors */
+        --lab-white: #FFFFFF;
+        --lab-light-gray: #F8F9FA;
+        --lab-gray: #E9ECEF;
+        --lab-medium-gray: #DEE2E6;
+        --lab-dark-gray: #6C757D;
+        --lab-darker-gray: #495057;
+        --lab-text: #212529;
+        --lab-text-muted: #6C757D;
+       
+        /* Shadows and Effects */
+        --lab-shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        --lab-shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        --lab-shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+       
+        /* Border Radius */
+        --lab-radius-sm: 4px;
+        --lab-radius-md: 6px;
+        --lab-radius-lg: 8px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--lab-light-gray);
+        min-height: 100vh;
+        margin: 0;
+        padding: 15px;
+        color: var(--lab-text);
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: var(--lab-white);
+        border-radius: var(--lab-radius-lg);
+        box-shadow: var(--lab-shadow-md);
+        overflow: hidden;
+        border: 1px solid var(--lab-medium-gray);
+    }
+
+    /* Lab System Header */
+    .header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--primary-blue-dark);
+        position: relative;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+    }
+
+    .header p {
+        margin: 0.3rem 0 0 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+        font-weight: 400;
+    }
+
+    .content-wrapper {
+        padding: 1.5rem;
+        background: var(--lab-white);
+    }
+
+    /* Lab System Card Styling */
+    .lab-card {
+        background: var(--lab-white);
+        border-radius: var(--lab-radius-md);
+        box-shadow: var(--lab-shadow-sm);
+        border: 1px solid var(--lab-medium-gray);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--lab-medium-gray);
+        background: var(--lab-light-gray);
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--lab-text);
+        margin: 0;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    /* Images Grid Layout */
+    .images-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 1.5rem;
+        align-items: start;
+        margin-bottom: 1.5rem;
+    }
+
+    .image-panel {
+        background: var(--lab-white);
+        border-radius: var(--lab-radius-md);
+        padding: 1rem;
+        box-shadow: var(--lab-shadow-sm);
+        border: 1px solid var(--lab-medium-gray);
+    }
+
+    .image-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--lab-text);
+        margin-bottom: 1rem;
+        text-align: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--lab-gray);
+    }
+
+    #canvas-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    #image-canvas {
+        border: 2px solid var(--lab-medium-gray);
+        border-radius: var(--lab-radius-sm);
+        max-width: 100%;
+        box-shadow: var(--lab-shadow-sm);
+    }
+
+    #annotated-image {
+        border: 2px solid var(--lab-medium-gray);
+        border-radius: var(--lab-radius-sm);
+        max-width: 100%;
+        display: block;
+        margin: 0 auto;
+        box-shadow: var(--lab-shadow-sm);
+    }
+
+    /* Lab System Controls Panel */
+    .controls-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-width: 280px;
+        background: var(--lab-white);
+        border-radius: var(--lab-radius-md);
+        padding: 1.5rem;
+        box-shadow: var(--lab-shadow-md);
+        border: 2px solid var(--primary-blue);
+        position: relative;
+    }
+
+    .controls-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Lab System Button Styles */
+    .lab-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.87rem 1.5rem;
+        border: 1px solid transparent;
+        border-radius: var(--lab-radius-sm);
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        min-height: 48px;
+        text-transform: none;
+    }
+
+    .lab-btn .material-icons {
+        font-size: 1.3rem;
+    }
+
+    .lab-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--lab-shadow-sm);
+    }
+
+    .lab-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Primary Button (Blue) */
+    .btn-lab-primary {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue-dark);
+    }
+
+    .btn-lab-primary:hover {
+        background: var(--primary-blue-dark);
+        border-color: var(--primary-blue-dark);
+    }
+
+    /* Secondary Button (Teal) */
+    .btn-lab-secondary {
+        background: var(--secondary-teal);
+        color: white;
+        border-color: var(--secondary-teal-dark);
+    }
+
+    .btn-lab-secondary:hover {
+        background: var(--secondary-teal-dark);
+        border-color: var(--secondary-teal-dark);
+    }
+
+    /* Success Button (Green) */
+    .btn-lab-success {
+        background: var(--success-green);
+        color: white;
+        border-color: var(--success-green-dark);
+    }
+
+    .btn-lab-success:hover {
+        background: var(--success-green-dark);
+        border-color: var(--success-green-dark);
+    }
+
+    /* Warning Button (Orange) */
+    .btn-lab-warning {
+        background: var(--accent-orange);
+        color: white;
+        border-color: var(--accent-orange-dark);
+    }
+
+    .btn-lab-warning:hover {
+        background: var(--accent-orange-dark);
+        border-color: var(--accent-orange-dark);
+    }
+
+    /* Danger Button (Red) */
+    .btn-lab-danger {
+        background: var(--danger-red);
+        color: white;
+        border-color: var(--danger-red-dark);
+    }
+
+    .btn-lab-danger:hover {
+        background: var(--danger-red-dark);
+        border-color: var(--danger-red-dark);
+    }
+
+    /* Outline Buttons */
+    .btn-lab-outline {
+        background: transparent;
+        color: var(--primary-blue);
+        border-color: var(--primary-blue);
+    }
+
+    .btn-lab-outline:hover {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Active Button State */
+    .lab-btn.active {
+        box-shadow: 0 0 0 2px var(--primary-blue-light);
+        transform: translateY(-1px);
+    }
+
+    /* Floating Action Buttons - Lab Style */
+    .fab-container {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        z-index: 1000;
+    }
+
+    .lab-fab {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: var(--lab-shadow-md);
+        transition: all 0.2s ease;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .lab-fab:hover {
+        transform: scale(1.1);
+        box-shadow: var(--lab-shadow-lg);
+    }
+
+    .fab-lab-primary { background: var(--primary-blue); }
+    .fab-lab-secondary { background: var(--secondary-teal); }
+    .fab-lab-warning { background: var(--accent-orange); }
+
+    /* Instructions Panel - Lab Style */
+    .instructions-panel {
+        background: var(--lab-light-gray);
+        border: 1px solid var(--lab-medium-gray);
+        border-left: 4px solid var(--primary-blue);
+        border-radius: var(--lab-radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .instructions-title {
+        color: var(--primary-blue);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .instructions-content { color: var(--lab-text); line-height: 1.5; }
+    .instructions-content ol { padding-left: 1.5rem; }
+    .instructions-content li { margin-bottom: 0.5rem; }
+
+    .highlight {
+        background: rgba(74, 144, 226, 0.15);
+        color: var(--primary-blue-dark);
+        padding: 0.125rem 0.25rem;
+        border-radius: var(--lab-radius-sm);
+        font-weight: 500;
+    }
+
+    /* Delete Icons - Lab Style */
+    .delete-icon {
+        cursor: pointer;
+        color: var(--danger-red);
+        font-size: 16px;
+        position: absolute;
+        z-index: 20;
+        background: var(--lab-white);
+        border-radius: 50%;
+        padding: 3px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: var(--lab-shadow-sm);
+        transition: all 0.2s ease;
+        border: 1px solid var(--lab-medium-gray);
+    }
+
+    .delete-icon:hover {
+        transform: scale(1.15);
+        color: var(--danger-red-dark);
+        box-shadow: var(--lab-shadow-md);
+        background: #fff5f5;
+    }
+
+    /* Popup Styling - Lab Style */
+    .popup {
+        position: absolute;
+        display: none;
+        background: var(--lab-white);
+        border: 1px solid var(--lab-medium-gray);
+        border-radius: var(--lab-radius-md);
+        padding: 1.25rem;
+        z-index: 1000;
+        box-shadow: var(--lab-shadow-lg);
+        min-width: 280px;
+    }
+
+    .popup .input-field { margin-bottom: 1rem; }
+
+    .popup input {
+        border: 1px solid var(--lab-medium-gray);
+        border-radius: var(--lab-radius-sm);
+        padding: 0.75rem;
+        width: 100%;
+        font-size: 0.875rem;
+        transition: border-color 0.2s ease;
+    }
+
+    .popup input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    /* Table Styling - Lab Style */
+    .table-container {
+        background: var(--lab-white);
+        border-radius: var(--lab-radius-md);
+        overflow: hidden;
+        box-shadow: var(--lab-shadow-sm);
+        border: 1px solid var(--lab-medium-gray);
+    }
+
+    .table-header {
+        background: var(--primary-blue);
+        color: white;
+        padding: 1rem 1.5rem;
+    }
+
+    .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    #values-table { width: 100%; border-collapse: collapse; }
+
+    #values-table th {
+        background: var(--lab-light-gray);
+        color: var(--lab-text);
+        font-weight: 600;
+        padding: 0.875rem;
+        text-align: left;
+        border-bottom: 1px solid var(--lab-medium-gray);
+        font-size: 0.875rem;
+    }
+
+    #values-table td {
+        padding: 0.875rem;
+        border-bottom: 1px solid var(--lab-gray);
+        color: var(--lab-text);
+        font-size: 0.875rem;
+    }
+
+    #values-table tbody tr:hover { background: var(--lab-light-gray); }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .images-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+        .controls-panel { order: 2; min-width: auto; width: 100%; }
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        body { padding: 10px; }
+        .content-wrapper { padding: 1rem; }
+        .header { padding: 1rem 1.5rem; }
+        .header h1 { font-size: 1.5rem; }
+        .fab-container { top: 1rem; right: 1rem; }
+        .button-group { grid-template-columns: 1fr; }
+    }
+
+    /* Spots styling - Lab colors (base) */
+    .spot {
+        background-color: var(--accent-orange);
+        border: 2px solid var(--accent-orange-dark);
+        border-radius: 50%;
+        position: absolute;
+        z-index: 2000;
+        box-shadow: var(--lab-shadow-sm);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--lab-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active { background: rgba(92, 184, 92, 0.15); color: var(--success-green-dark); }
+    .status-pending { background: rgba(240, 173, 78, 0.15); color: var(--accent-orange-dark); }
+
+    /* === Anti-shrink + balanced columns (overrides) === */
+    .images-grid {
+        grid-template-columns: 1fr 320px 1fr; /* equal image panels, slim tools */
+        gap: 1.25rem;
+        align-items: start;
+    }
+    .image-panel{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #image-canvas,
+    #annotated-image {
+        width: auto;      /* use the explicit px we apply in JS */
+        height: auto;
+        max-width: none;
+        max-height: none;
+    }
+    #canvas-container {
+        width: 100%;      /* lets the panel give full width to the canvas */
+    }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- Lab System Header -->
+    <div class="header">
+        <h1>TLC Image Annotation Tool</h1>
+        <p>Thin Layer Chromatography Analysis • Laboratory Management System</p>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- Image Source Selection -->
+        <div class="lab-card">
+            <div class="card-header">
+                <h5 class="card-title">📁 Image Source</h5>
+            </div>
+            <div class="card-content">
+                <div class="source-selection">
+                    <div class="button-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <button id="eln-source-btn" class="lab-btn btn-lab-primary active" onclick="selectImageSource('eln')">
+                            <i class="material-icons">cloud</i>
+                            From ELN
+                        </button>
+                        <button id="local-source-btn" class="lab-btn btn-lab-outline" onclick="selectImageSource('local')">
+                            <i class="material-icons">upload_file</i>
+                            Upload Local
+                        </button>
+                    </div>
+                   
+                    <!-- Local Upload Section -->
+                    <div id="local-upload-section" style="display: none; margin-top: 1.5rem;">
+                        <div class="upload-area" style="border: 2px dashed var(--lab-medium-gray); border-radius: var(--lab-radius-md); padding: 2rem; text-align: center; background: var(--lab-light-gray);">
+                            <i class="material-icons" style="font-size: 3rem; color: var(--lab-dark-gray);">cloud_upload</i>
+                            <h6 style="margin: 1rem 0; color: var(--lab-text);">Upload TLC Image</h6>
+                            <p style="color: var(--lab-text-muted); margin-bottom: 1.5rem;">Drag & drop your image here or click to browse</p>
+                            <input type="file" id="local-image-input" accept="image/*" style="display: none;">
+                            <button class="lab-btn btn-lab-primary" onclick="document.getElementById('local-image-input').click()">
+                                <i class="material-icons">folder_open</i>
+                                Choose File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <!-- Main Content Card -->
+        <div class="lab-card">
+            <div class="card-content">
+                <!-- Images and Controls Grid -->
+                <div class="images-grid">
+                    <!-- Original Image Panel -->
+                    <div class="image-panel">
+                        <h5 class="image-title">📸 Original Image</h5>
+                        <div id="canvas-container">
+                            <canvas id="image-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Controls Panel (Centered) -->
+                    <div class="controls-panel">
+                        <h6 class="controls-title">Annotation Tools</h6>
+                       
+                        <div class="button-group">
+							<button class="lab-btn btn-lab-warning" onclick="autoDetectLines()">
+								<i class="material-icons">straighten</i>
+								Auto Detect Lines
+							</button>							
+						
+							<button class="lab-btn btn-lab-warning" onclick="autoDetectSpots()">
+								<i class="material-icons">auto_fix_high</i>
+								Auto Detect Spots
+							</button>	
+											
+                            <button class="lab-btn btn-lab-primary" onclick="addSpots(event)">
+                                <i class="material-icons">add_circle</i>
+                                Add Spots
+                            </button>
+                            <button class="lab-btn btn-lab-secondary" onclick="addMinLine(event)">
+                                <i class="material-icons">horizontal_rule</i>
+                                Min Line
+                            </button>
+                            <button class="lab-btn btn-lab-secondary" onclick="addMaxLine(event)">
+                                <i class="material-icons">horizontal_rule</i>
+                                Max Line
+                            </button>
+                            <button class="lab-btn btn-lab-primary" onclick="addHorizontalLine(event)">
+                                <i class="material-icons">remove</i>
+                                H-Line
+                            </button>
+                            <button class="lab-btn btn-lab-primary" onclick="addVerticalLine(event)">
+                                <i class="material-icons">more_vert</i>
+                                V-Line
+                            </button>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="lab-btn btn-lab-success" onclick="calculateRF()">
+                                <i class="material-icons">calculate</i>
+								
+								Calculate RF
+                            </button>
+                            <button class="lab-btn btn-lab-danger" onclick="resetCanvas()">
+                                <i class="material-icons">refresh</i>
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Result Panel -->
+                    <div class="image-panel">
+                        <h5 class="image-title" id="annotated-heading">📋 Instructions</h5>
+                       
+                        <!-- Instructions Panel -->
+                        <div id="instructions-box" class="instructions-panel">
+                            <h6 class="instructions-title">
+                                <i class="material-icons">info</i>
+                                TLC Analysis Instructions
+                            </h6>
+                            <div class="instructions-content">
+                                <p><strong>Use the workflow below to annotate your TLC plate and calculate RF values accurately.</strong></p>
+
+                                <h6 style="color: var(--primary-blue); margin-top: 1.5rem; margin-bottom: 0.75rem;">📋 Recommended Workflow:</h6>
+                                <ol style="line-height: 1.8;">
+                                    <li><strong>Load Your Image:</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>Select <span class="highlight">From ELN</span> to use the image already linked to the experiment</li>
+                                            <li>Select <span class="highlight">Upload Local</span> if you want to analyze a file from your computer</li>
+                                            <li>Confirm the TLC plate is clearly visible in the <strong>Original Image</strong> panel before you begin</li>
+                                        </ul>
+                                    </li>
+
+                                    <li><strong>Set the Baseline and Solvent Front:</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>Click <span class="highlight">Min Line</span> and draw it across the <strong>baseline / origin</strong> near the bottom of the plate</li>
+                                            <li>Click <span class="highlight">Max Line</span> and draw it across the <strong>solvent front</strong> near the top of the plate</li>
+                                            <li>You can also try <span class="highlight">Auto Detect Lines</span> first, then adjust manually if needed</li>
+                                        </ul>
+                                    </li>
+
+                                    <li><strong>Add or Detect Spots:</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>Click <span class="highlight">Add Spots</span> and select the center of each visible spot</li>
+                                            <li>Each spot is marked with an orange circle for easy review</li>
+                                            <li>Use <span class="highlight">Auto Detect Spots</span> when the image is clean and the spot contrast is strong</li>
+                                        </ul>
+                                    </li>
+
+                                    <li><strong>Organize the Plate (Optional):</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>Use <span class="highlight">V-Line</span> to separate sample lanes</li>
+                                            <li>Use <span class="highlight">H-Line</span> to add extra horizontal references</li>
+                                            <li>Enter labels when prompted so the RF table is easier to interpret</li>
+                                        </ul>
+                                    </li>
+
+                                    <li><strong>Calculate RF Values:</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>Click <span class="highlight">Calculate RF</span> after your lines and spots are in place</li>
+                                            <li>The system uses <strong>RF = distance traveled by spot / distance traveled by solvent front</strong></li>
+                                            <li>Results appear in the table below with mixture labels, substance labels, RF values, and status indicators</li>
+                                        </ul>
+                                    </li>
+
+                                    <li><strong>Save or Export Results:</strong>
+                                        <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                            <li>💾 <strong>Download CSV:</strong> Export the RF results table</li>
+                                            <li>🖼️ <strong>Save Image:</strong> Store the annotated TLC image</li>
+                                            <li>☁️ <strong>Upload to ELN:</strong> Send the calculated data back to the ELN record</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+
+                                <div style="background: rgba(74, 144, 226, 0.1); padding: 1rem; border-radius: 6px; margin: 1.5rem 0;">
+                                    <h6 style="color: var(--primary-blue); margin: 0 0 0.5rem 0;">💡 Pro Tips:</h6>
+                                    <ul style="margin: 0; font-size: 0.9rem;">
+                                        <li><strong>Start with the lines:</strong> Set the Min and Max lines before trusting RF calculations</li>
+                                        <li><strong>Review auto-detection:</strong> Auto-detected spots and lines should be checked before saving results</li>
+                                        <li><strong>Use lane labels:</strong> Labeled V-lines make multi-lane plates easier to read in the results table</li>
+                                        <li><strong>Clean up mistakes:</strong> Remove incorrect annotations with the red ❌ marker when needed</li>
+                                        <li><strong>Reset if necessary:</strong> Use <span class="highlight">Reset</span> to clear the canvas and start over</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(240, 173, 78, 0.1); padding: 1rem; border-radius: 6px; margin: 1.5rem 0;">
+                                    <h6 style="color: var(--accent-orange-dark); margin: 0 0 0.5rem 0;">⚠️ Important Notes:</h6>
+                                    <ul style="margin: 0; font-size: 0.9rem;">
+                                        <li><strong>Image quality matters:</strong> Use a clear, well-lit TLC image for the best detection results</li>
+                                        <li><strong>Reference lines define the calculation:</strong> Min line = origin, Max line = solvent front</li>
+                                        <li><strong>Spot placement matters:</strong> Click the center of each spot for the most accurate RF values</li>
+                                        <li><strong>Validate the output:</strong> RF values should generally fall between 0 and 1</li>
+                                    </ul>
+                                </div>
+
+                                <div style="text-align: center; margin-top: 2rem;">
+                                    <button class="lab-btn btn-lab-warning" onclick="updateAnnotatedHeading('editing')" style="font-size: 1rem; padding: 0.875rem 2rem;">
+                                        <i class="material-icons">play_arrow</i>
+                                        Start TLC Analysis
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                       
+                        <!-- Annotated Image (initially hidden) -->
+                        <img id="annotated-image" style="display: none;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RF Values Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h5 class="table-title">📊 RF Values Analysis Results</h5>
+            </div>
+            <table id="values-table">
+                <thead>
+                    <tr>
+                        <th>Mixture Label (X axis)</th>
+                        <th>Substance Label (Y axis)</th>
+                        <th>RF Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- RF Values will be populated dynamically here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <button class="lab-fab fab-lab-primary" onclick="saveCSV()" title="Download CSV">
+            <i class="material-icons">save_alt</i>
+        </button>
+        <button class="lab-fab fab-lab-secondary" onclick="saveImageToServer()" title="Save Image">
+            <i class="material-icons">image</i>
+        </button>
+        <button class="lab-fab fab-lab-warning" onclick="saveCSVToServer()" title="Upload to ELN">
+            <i class="material-icons">cloud_upload</i>
+        </button>
+    </div>
+
+    <!-- Popup for Line Annotations -->
+    <div id="line-popup" class="popup">
+        <div class="input-field">
+            <input type="text" id="line-text" placeholder="Enter annotation text">
+        </div>
+        <button class="lab-btn btn-lab-primary" onclick="submitAnnotation()">
+            <i class="material-icons">check</i>
+            Submit
+        </button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let image = new Image();
+    // Initialize canvas and image rendering
+    let canvas = document.getElementById('image-canvas');
+    let ctx = canvas.getContext('2d');
+
+	// === Visual constants (thicker lines, larger spots, better hit targets) ===
+	const LINE_WIDTH        = 4;                 // thicker lines everywhere
+	const SPOT_RADIUS       = 12;                // larger spot ring
+	const HIT_RADIUS        = SPOT_RADIUS + 2;   // hover/drag radius for spots
+	const LINE_HIT_TOL      = 8;                 // line proximity tolerance
+	const GLOBAL_LINE_COLOR = 'yellow';         // Min/Max dedicated 
+
+    // Initialize variables for annotations
+    let lines = [];
+
+    let draggingSpot = null;
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let justDragged = false; // Prevent accidental spot creation after drag
+    let draggingLine = null;
+    let lineDragOffsetY = 0;
+    let spots = [];
+    let currentLine = null;
+    let isHorizontal = true; // Flag for line orientation
+    let lineType = ''; // Type of line to be drawn
+    let addingSpots = false; // Flag to indicate spot addition mode
+    let lineDragOffsetX = 0;
+    let imageSource = 'eln'; // Default to ELN
+    let isLocalImage = false;
+
+	/* ==== Color management for per-spot H/V lines (no green, no red) ==== */
+	const colorPalette = [
+	'#2980b9', // blue
+	'#8e44ad', // purple
+	'#d35400', // orange
+	'#2c3e50', // navy/charcoal
+	'#7f8c8d', // gray
+	'#f39c12', // amber
+	'#b33771', // magenta
+	'#e67e22', // carrot
+	'#34495e', // dark slate
+	'#3f51b5'  // indigo
+	];
+    let nextColorIdx = 0;
+    let activeSpotId = null;
+
+    // Dynamic sizing: use the inner width of the image panel
+    function panelInnerWidth() {
+        const panel = document.querySelector('.images-grid .image-panel'); // the left panel
+        if (!panel) return 440; // fallback
+        const style = getComputedStyle(panel);
+        const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        return Math.max(320, Math.floor(panel.clientWidth - padX)); // never below 320
+    }
+    function fitToBox(nw, nh, maxW, maxH) {
+        const scale = Math.min(maxW / nw, maxH / nh, 1);
+        return { dw: Math.round(nw * scale), dh: Math.round(nh * scale) };
+    }
+
+    function setActiveButton(clickedButton) {
+        // Remove active class from all annotation buttons
+        document.querySelectorAll('.lab-btn').forEach(btn => btn.classList.remove('active'));
+        // Add active class to clicked button
+        if (clickedButton) {
+            clickedButton.classList.add('active');
+        }
+    }
+
+    // Handle image loading and drawing on the canvas (ELN)
+    image.onload = function () {
+        const nw = image.naturalWidth  || image.width;
+        const nh = image.naturalHeight || image.height;
+
+        const panel = document.querySelector('.images-grid .image-panel');
+        const style = getComputedStyle(panel);
+        const padX  = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        const maxW  = Math.max(320, Math.floor(panel.clientWidth - padX));
+        const maxH  = 620;
+
+        const scale = Math.min(maxW / nw, maxH / nh, 1);
+        const dw = Math.round(nw * scale);
+        const dh = Math.round(nh * scale);
+
+        canvas.width  = dw;
+        canvas.height = dh;
+
+        // reset transforms and draw
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0, 0, dw, dh);
+        ctx.drawImage(image, 0, 0, dw, dh);
+
+        // keep factor consistent
+        window.scaleFactor = nh / dh;
+
+        // lock container size to prevent shrink
+        const container = document.getElementById('canvas-container');
+        if (container) {
+            container.style.width  = dw + 'px';
+            container.style.height = dh + 'px';
+        }
+
+        // size the annotated image
+        const annotated = document.getElementById('annotated-image');
+        annotated.style.width     = dw + 'px';
+        annotated.style.height    = dh + 'px';
+        annotated.style.maxWidth  = dw + 'px';
+        annotated.style.maxHeight = dh + 'px';
+    };
+
+    // Function to disable other annotation actions
+    function disableOtherActions() {
+        addingSpots = false; // Ensure we are not adding spots
+        canvas.removeEventListener('click', drawSpot); // Remove spot drawing event listener
+        canvas.removeEventListener('click', drawLine); // Remove line drawing event listener
+    }
+
+    function addMinLine(event) {
+        disableOtherActions();
+        lineType = 'min';
+        isHorizontal = true;
+        updateAnnotatedHeading('editing');
+        canvas.addEventListener('click', drawLine);
+        if (event && event.target) setActiveButton(event.target);
+    }
+
+    function addMaxLine(event) {
+        disableOtherActions();
+        lineType = 'max';
+        isHorizontal = true;
+        updateAnnotatedHeading('editing');
+        canvas.addEventListener('click', drawLine);
+        if (event && event.target) setActiveButton(event.target);
+    }
+
+    function addHorizontalLine(event) {
+        disableOtherActions();
+        lineType = 'horizontal';
+        isHorizontal = true;
+        updateAnnotatedHeading('editing');
+        canvas.addEventListener('click', drawLine);
+        if (event && event.target) setActiveButton(event.target);
+    }
+
+    function addVerticalLine(event) {
+        disableOtherActions();
+        lineType = 'vertical';
+        isHorizontal = false;
+        updateAnnotatedHeading('editing');
+        canvas.addEventListener('click', drawLine);
+        if (event && event.target) setActiveButton(event.target);
+    }
+
+    // Function to draw a line on the canvas
+    function drawLine(event) {
+        let x = event.offsetX;
+        let y = event.offsetY;
+
+        // Prevent duplicate 'min' or 'max' lines
+        if (isHorizontal && (lineType === 'min' || lineType === 'max')) {
+            const existing = lines.find(line => line.type === lineType);
+            if (existing) {
+                M.toast({ html: `A "${lineType}" line already exists.`});
+                canvas.removeEventListener('click', drawLine);
+                return;
+            }
+        }
+
+		const isGlobal = (lineType === 'min' || lineType === 'max');
+		if (!isGlobal && activeSpotId === null) {
+			M.toast({ html: 'Select a spot first (click a spot), then add H/V lines.' });
+			canvas.removeEventListener('click', drawLine);
+			return;
+		}
+		
+		const ownerSpotId = isGlobal ? null : activeSpotId;
+		// Min/Max = dedicated red; V/H = spot color (non-red, non-green palette)
+		const ownerColor = isGlobal
+		? GLOBAL_LINE_COLOR
+		: (spots.find(s => s.id === ownerSpotId)?.color || colorPalette[0]);
+  
+        ctx.font = '16px Arial';
+        ctx.strokeStyle = ownerColor;
+        ctx.fillStyle = ownerColor;
+        ctx.lineWidth = LINE_WIDTH;
+
+        if (isHorizontal) {
+            const existingHorizontal = lines.find(line =>
+                line.type === 'horizontal' &&
+                Math.abs(line.y / window.scaleFactor - y) <= LINE_HIT_TOL
+            );
+            if (existingHorizontal) {
+                existingHorizontal.ownerSpotIds = existingHorizontal.ownerSpotIds || [];
+                if (ownerSpotId && !existingHorizontal.ownerSpotIds.includes(ownerSpotId)) {
+                    existingHorizontal.ownerSpotIds.push(ownerSpotId);
+                }
+                currentLine = existingHorizontal;
+                if (!currentLine.text) {
+                    showPopup(event.pageX, event.pageY);
+                } else {
+                    M.toast({ html: 'Using existing H-line label for this spot.' });
+                }
+                canvas.removeEventListener('click', drawLine);
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+
+            currentLine = {
+                id: Date.now(),
+                type: lineType,
+                y: y * window.scaleFactor,
+                text: lineType === 'min' ? 'min' : lineType === 'max' ? 'max' : '',
+                color: ownerColor,
+                ownerSpotIds: ownerSpotId ? [ownerSpotId] : [],
+                ownerSpotId: ownerSpotId
+            };
+
+            if (currentLine.text) {
+                ctx.fillText(currentLine.text, 10, y - 5);
+            }
+            addDeleteIcon(currentLine, 10, y);
+
+            if (lineType !== 'min' && lineType !== 'max') {
+                showPopup(event.pageX, event.pageY);
+            }
+
+            lines.push(currentLine);
+            canvas.removeEventListener('click', drawLine);
+        } else {
+            // vertical
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+
+            currentLine = {
+                id: Date.now(),
+                type: lineType,
+                x: x * window.scaleFactor,
+                text: '',
+                color: ownerColor,
+                ownerSpotId: ownerSpotId
+            };
+
+            addDeleteIcon(currentLine, x, 10);
+            showPopup(event.pageX, event.pageY);
+            lines.push(currentLine);
+            canvas.removeEventListener('click', drawLine);
+        }
+    }
+
+    // Function to show a popup for line annotations
+    function showPopup(x, y) {
+        let popup = document.getElementById('line-popup');
+        let input = document.getElementById('line-text');
+
+        popup.style.left = x + 'px';
+        popup.style.top = y + 'px';
+        popup.style.display = 'block';
+
+        input.value = '';
+        setTimeout(() => { input.focus(); }, 100);
+    }
+
+    // Function to submit an annotation for the current line
+    function submitAnnotation() {
+        let text = document.getElementById('line-text').value;
+        if (text.trim() === '') return;
+
+        currentLine.text = text;
+        ctx.font = '16px Arial';
+        ctx.fillStyle = currentLine.color || 'red';
+
+        if (currentLine.type === 'horizontal' || currentLine.type === 'min' || currentLine.type === 'max') {
+            ctx.fillText(text, 10, currentLine.y / window.scaleFactor - 5);
+        } else {
+            ctx.fillText(text, currentLine.x / window.scaleFactor + 5, 10);
+        }
+
+        document.getElementById('line-text').value = '';
+        document.getElementById('line-popup').style.display = 'none';
+    }
+
+    // Function to add a delete icon to a line
+    function addDeleteIcon(line, x, y) {
+        let icon = document.createElement('i');
+        icon.innerHTML = 'delete';
+        icon.className = 'material-icons delete-icon';
+		icon.style.borderWidth = '2px';
+        icon.style.left = x + 'px';
+        icon.style.top = y + 'px';
+
+        // Tint the icon and its border to match line color if available
+        if (line && line.color) {
+            icon.style.color = line.color;
+            icon.style.borderColor = line.color + '33';
+        }
+
+        icon.onclick = function() {
+            deleteLine(line.id);
+        };
+
+        document.getElementById('canvas-container').appendChild(icon);
+        line.deleteIcon = icon;
+    }
+
+    // Delete spot with cascade removal of its owned lines
+    function deleteSpot(id) {
+        // Remove any delete icon the spot might have (not used, safe)
+        let spotToDelete = spots.find(s => s.id === id);
+        if (spotToDelete && spotToDelete.deleteIcon) {
+            spotToDelete.deleteIcon.remove();
+        }
+        // Remove lines owned by this spot
+        lines = lines.filter(line => {
+            if (line.type === 'horizontal') {
+                if (Array.isArray(line.ownerSpotIds)) {
+                    line.ownerSpotIds = line.ownerSpotIds.filter(ownerId => ownerId !== id);
+                    if (line.ownerSpotIds.length === 0) {
+                        if (line.deleteIcon) line.deleteIcon.remove();
+                        return false;
+                    }
+                }
+                return true;
+            }
+            if (line.ownerSpotId === id) {
+                if (line.deleteIcon) line.deleteIcon.remove();
+                return false;
+            }
+            return true;
+        });
+
+        // Remove the spot itself
+        spots = spots.filter(s => s.id !== id);
+
+        // Reset active spot if it was this one
+        if (activeSpotId === id) activeSpotId = null;
+
+        redrawCanvas();
+    }
+
+    function deleteLine(id) {
+        const index = lines.findIndex(line => line.id === id);
+        if (index === -1) return;
+
+        const lineToDelete = lines[index];
+        if (lineToDelete.deleteIcon) {
+            lineToDelete.deleteIcon.remove();
+        }
+
+        lines.splice(index, 1);
+        redrawCanvas();
+    }
+
+    function addSpots(event) {
+        disableOtherActions();
+        addingSpots = true;
+        updateAnnotatedHeading('editing');
+
+        canvas.removeEventListener('click', drawSpot);
+        canvas.addEventListener('click', drawSpot);
+
+        if (event && event.target) {
+            setActiveButton(event.target);
+        }
+    }
+
+    // Function to draw a spot on the canvas
+    function drawSpot(event) {
+        if (!addingSpots || isDragging || justDragged) return;
+
+        let x = event.offsetX;
+        let y = event.offsetY;
+
+        // Prevent duplicate spots at same/similar location
+        let isDuplicate = spots.some(spot =>
+			Math.abs(spot.x / window.scaleFactor - x) < HIT_RADIUS &&
+			Math.abs(spot.y / window.scaleFactor - y) < HIT_RADIUS
+        );
+        if (isDuplicate) {
+            M.toast({ html: 'Spot already exists here.' });
+            return;
+        }
+
+        // Create and store new spot with unique color
+        let spot = {
+            id: Date.now(),
+            x: x * window.scaleFactor,
+            y: y * window.scaleFactor,
+            color: colorPalette[nextColorIdx % colorPalette.length]
+        };
+        nextColorIdx++;
+        activeSpotId = spot.id; // make the newly created spot active
+
+        spots.push(spot);
+        redrawCanvas();
+    }
+
+    function handleMouseDown(e) {
+        const target = e.target;
+        if (target.classList.contains('delete-icon')) return;
+
+        let x = e.offsetX;
+        let y = e.offsetY;
+
+        // Check if clicking on a spot
+        for (let spot of spots) {
+            let spotX = spot.x / window.scaleFactor;
+            let spotY = spot.y / window.scaleFactor;
+
+            let dx = x - spotX;
+            let dy = y - spotY;
+            if (Math.sqrt(dx * dx + dy * dy) < HIT_RADIUS) {
+                draggingSpot = spot;
+                activeSpotId = spot.id; // NEW: activatation drives H/V line color
+                isDragging = true;
+                dragOffsetX = dx;
+                dragOffsetY = dy;
+                canvas.style.cursor = 'grabbing';
+                return;
+            }
+        }
+
+        // Check if clicking near any line
+        for (let line of lines) {
+            if (line.type === 'horizontal' || line.type === 'min' || line.type === 'max') {
+                let lineY = line.y / window.scaleFactor;
+                if (Math.abs(y - lineY) < LINE_HIT_TOL) {
+                    draggingLine = line;
+                    isDragging = true;
+                    lineDragOffsetY = y - lineY;
+                    canvas.style.cursor = 'ns-resize';
+                    return;
+                }
+            } else if (line.type === 'vertical') {
+                let lineX = line.x / window.scaleFactor;
+                if (Math.abs(x - lineX) < LINE_HIT_TOL) {
+                    draggingLine = line;
+                    isDragging = true;
+                    lineDragOffsetX = x - lineX;
+                    canvas.style.cursor = 'ew-resize';
+                    return;
+                }
+            }
+        }
+    }
+
+    function handleMouseMove(e) {
+        let isOverSpot = false;
+
+        // Check if hovering over a spot
+        for (let spot of spots) {
+            let spotX = spot.x / window.scaleFactor;
+            let spotY = spot.y / window.scaleFactor;
+
+            let dx = e.offsetX - spotX;
+            let dy = e.offsetY - spotY;
+
+			if (Math.sqrt(dx * dx + dy * dy) < HIT_RADIUS) {
+                isOverSpot = true;
+                break;
+            }
+        }
+
+        if (isDragging) {
+            if (draggingSpot) {
+                let newX = e.offsetX - dragOffsetX;
+                let newY = e.offsetY - dragOffsetY;
+
+                draggingSpot.x = newX * window.scaleFactor;
+                draggingSpot.y = newY * window.scaleFactor;
+
+                redrawCanvas();
+                canvas.style.cursor = 'grabbing';
+            } else if (draggingLine) {
+                if (draggingLine.type === 'horizontal' || draggingLine.type === 'min' || draggingLine.type === 'max') {
+                    let newY = e.offsetY - lineDragOffsetY;
+                    draggingLine.y = newY * window.scaleFactor;
+                    redrawCanvas();
+                    canvas.style.cursor = 'ns-resize';
+                } else if (draggingLine.type === 'vertical') {
+                    let newX = e.offsetX - lineDragOffsetX;
+                    draggingLine.x = newX * window.scaleFactor;
+                    redrawCanvas();
+                    canvas.style.cursor = 'ew-resize';
+                }
+            }
+        } else {
+            canvas.style.cursor = isOverSpot ? 'pointer' : 'default';
+        }
+    }
+
+    function handleMouseUp(e) {
+        if (isDragging) {
+            isDragging = false;
+            draggingSpot = null;
+            draggingLine = null;
+            canvas.style.cursor = 'default';
+            justDragged = true;
+
+            setTimeout(() => {
+                justDragged = false;
+            }, 200);
+        }
+    }
+
+    function handleDoubleClick(e) {
+        let x = e.offsetX;
+        let y = e.offsetY;
+
+        // Check if double-clicking on a spot
+        for (let spot of spots) {
+            let spotX = spot.x / window.scaleFactor;
+            let spotY = spot.y / window.scaleFactor;
+
+            let dx = x - spotX;
+            let dy = y - spotY;
+
+            if (Math.sqrt(dx * dx + dy * dy) < HIT_RADIUS) {
+                // Cascade delete via helper
+                deleteSpot(spot.id);
+                M.toast({ html: 'Spot deleted!' });
+                return;
+            }
+        }
+    }
+
+
+    function getImageRequestPayload() {
+        if (isLocalImage) {
+            return {
+                isLocalImage: true,
+                imageSrc: window.currentImageFileName || 'local_upload.png',
+                imageData: window.localImageData || image.src,
+                localImagePath: window.localImagePath || null
+            };
+        }
+
+        let imageSrc = null;
+        try {
+            const parsedUrl = new URL(image.src);
+            const filePath = parsedUrl.searchParams.get("file_path");
+            imageSrc = decodeURIComponent(filePath).split('/').pop();
+        } catch (error) {
+            imageSrc = 'unknown_image.png';
+        }
+
+        return {
+            isLocalImage: false,
+            imageSrc,
+            imageData: null,
+            localImagePath: null
+        };
+    }
+
+    // Function to calculate RF (retention factor)
+    function calculateRF() {
+        let minLine = lines.find(line => line.type === 'min');
+        let maxLine = lines.find(line => line.type === 'max');
+
+        if (!minLine || !maxLine) {
+            M.toast({html: 'Please add "min" and "max" lines before calculating RF values.'});
+            return;
+        }
+
+        if (spots.length === 0) {
+            M.toast({html: 'Please add spots before calculating RF values.'});
+            return;
+        }
+
+        const imagePayload = getImageRequestPayload();
+
+        // Use natural size for both sources
+        const naturalWidth  = image.naturalWidth  || canvas.width;
+        const naturalHeight = image.naturalHeight || canvas.height;
+
+        const data = {
+            lines,            // includes color/ownerSpotId (server can ignore extra fields)
+            spots,            // includes color
+            imageSrc: imagePayload.imageSrc,
+            isLocalImage: imagePayload.isLocalImage,
+            imageData: imagePayload.imageData,
+            localImagePath: imagePayload.localImagePath,
+            canvasWidth:  naturalWidth,
+            canvasHeight: naturalHeight,
+            scaleFactor: window.scaleFactor || 1
+        };
+
+        // Loading indicator
+        Swal.fire({
+            title: 'Calculating RF Values...',
+            text: 'Please wait while we process your annotations.',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        fetch('/calculate_rf/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(`HTTP error! status: ${response.status}`); });
+            }
+            return response.json();
+        })
+        .then(result => {
+            Swal.close();
+
+            if (result.rf_values && result.rf_values.length > 0) {
+                populateTable(result.rf_values);
+
+                let annotatedImage = document.getElementById('annotated-image');
+                if (result.annotated_image_url) {
+                    annotatedImage.src = result.annotated_image_url + '?t=' + new Date().getTime();
+                    updateAnnotatedHeading('annotated');
+                    annotatedImage.style.width = canvas.width + 'px';
+                    annotatedImage.style.height = canvas.height + 'px';
+                    M.toast({html: `RF calculation completed! Found ${result.rf_values.length} spots.`});
+                } else {
+                    M.toast({html: 'RF values calculated, but annotated image not available.'});
+                }
+            } else {
+                M.toast({html: 'No RF values calculated. Please check your annotations.'});
+            }
+        })
+        .catch(error => {
+            console.error('Error calculating RF:', error);
+            Swal.close();
+            Swal.fire({
+                title: 'Calculation Error!',
+                text: 'Failed to calculate RF values. Please check your annotations and try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+
+    function populateTable(rfValues) {
+        let tbody = document.getElementById('values-table').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+
+        rfValues.forEach((value, index) => {
+            let row = tbody.insertRow();
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            let cell4 = row.insertCell(3);
+
+            cell1.innerHTML = value.mixture_label || value.solvent || `Lane ${index + 1}`;
+            cell2.innerHTML = value.substance_label || value.compound || `Spot ${index + 1}`;
+            cell3.innerHTML = (typeof value.rf_value !== 'undefined') ? value.rf_value : value.rf;
+            cell4.innerHTML = '<span class="status-badge status-active">Calculated</span>';
+        });
+    }
+
+    // Function to save RF values to a CSV file
+    function saveCSV() {
+        let table = document.getElementById('values-table');
+        let rows = Array.from(table.rows);
+        let csvContent = 'data:text/csv;charset=utf-8,';
+        csvContent += 'Measurement type;thin layer chromatography (TLC);CHMO:0001007\n\n';
+        csvContent += 'mixture_label (X axis),substance_label (Y axis),RF value\n';
+
+        rows.forEach((row, index) => {
+            if (index === 0) return;
+            let cols = Array.from(row.cells).map(cell => cell.textContent);
+            csvContent += cols[0] + "," + cols[1] + "," + cols[2] + "\n";
+        });
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'rf_values.csv');
+        document.body.appendChild(link);
+        link.click();
+
+        Swal.fire({
+            title: 'Success!',
+            text: 'CSV has been successfully saved.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    }
+
+    // Save annotated image & CSV to server
+    function saveImageToServer() {
+        if (isLocalImage) {
+            downloadAnnotatedImage();
+            return;
+        }
+
+        const inputText = '';
+        const dateTime = new Date().toLocaleString('en-GB', {
+            year: '2-digit', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).replace(/\//g, '').replace(/, /g, '').replace(/:/g, '');
+
+        const filename = inputText + '_' + dateTime + '.png';
+        const annotatedImage = document.getElementById("annotated-image");
+
+        if (annotatedImage && annotatedImage.src) {
+            const originalImage = new Image();
+            originalImage.src = annotatedImage.src;
+
+            originalImage.onload = function() {
+                const can = document.createElement("canvas");
+                const context = can.getContext("2d");
+                can.width = originalImage.naturalWidth;
+                can.height = originalImage.naturalHeight;
+                context.drawImage(originalImage, 0, 0);
+
+                can.toBlob(function(blob) {
+                    const formData = new FormData();
+                    formData.append('file', blob, filename);
+
+                    const externalApiUrl = window.decodedPostUrl;
+                    const csrftoken = getCookie('csrftoken');
+
+                    fetch(externalApiUrl, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {'X-CSRFToken': csrftoken}
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Image saved to ELN successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error saving to ELN:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Error saving image to ELN.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                }, 'image/png');
+            };
+
+            originalImage.onerror = function() {
+                console.error('Failed to load annotated image for saving.');
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to load annotated image.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            };
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Annotated image not found. Please calculate RF values first.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    function saveCSVToServer() {
+        const inputText = '';
+        const dateTime = new Date().toLocaleString('en-GB', {
+            year: '2-digit', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).replace(/\//g, '').replace(/, /g, '').replace(/:/g, '');
+
+        const csvFilename = inputText + '_' + dateTime + '.csv';
+        const csvData = getCSVData();
+
+        if (csvData) {
+            const csvBlob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const formData = new FormData();
+            formData.append('file', csvBlob, csvFilename);
+
+            const externalApiUrl = window.decodedPostUrl;
+            const csrftoken = getCookie('csrftoken');
+
+            fetch(externalApiUrl, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrftoken }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'CSV file saved to ELN successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            })
+            .catch(error => {
+                console.error('Error saving CSV to server:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to save CSV to server.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'No CSV data found to save.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    // Function to retrieve CSV data from the values table with inline notation
+    function getCSVData() {
+        let table = document.getElementById('values-table');
+        let rows = Array.from(table.rows);
+
+        let csvContent = "Measurement type;thin layer chromatography (TLC);CHMO:0001007\n\n";
+        csvContent += "mixture_label (X axis),substance_label (Y axis),RF value\n";
+
+        let rfValues = [];
+
+        rows.forEach(function(row, index) {
+            if (index === 0) return;
+
+            let cols = Array.from(row.cells).map(function(cell) {
+                return cell.textContent.trim();
+            });
+
+            csvContent += cols[0] + "," + cols[1] + "," + cols[2] + "\n";
+            rfValues.push(cols[2] + " (" + cols[1] + ")[h" + index + "]");
+        });
+
+        csvContent += "\nDetails:\nTLC (solvents); Rf (UV-Vis in nm, staining) = " + rfValues.join(", ") + ".\n";
+        return csvContent;
+    }
+
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateAnnotatedHeading(state) {
+        const heading = document.getElementById('annotated-heading');
+        const annotatedImage = document.getElementById('annotated-image');
+        const instructionsBox = document.getElementById('instructions-box');
+
+        if (!heading) return;
+
+        if (state === 'instructions') {
+            heading.textContent = 'Instructions';
+            instructionsBox.style.display = 'block';
+            annotatedImage.style.display = 'none';
+        } else if (state === 'editing') {
+            heading.textContent = 'Prepare Annotations';
+            instructionsBox.style.display = 'none';
+            annotatedImage.style.display = 'none';
+        } else if (state === 'annotated') {
+            heading.textContent = 'Annotated Image';
+            instructionsBox.style.display = 'none';
+            annotatedImage.style.display = 'block';
+        }
+    }
+
+    function resetCanvas() {
+        // Clear all annotations
+        lines = [];
+        spots = [];
+        activeSpotId = null;
+        nextColorIdx = 0;
+
+        // Remove all delete icons
+        document.querySelectorAll('.delete-icon').forEach(el => el.remove());
+
+        // Clear canvas and redraw image
+        if (image && image.complete) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Clear table
+        const tableBody = document.querySelector('#values-table tbody');
+        if (tableBody) {
+            tableBody.innerHTML = '';
+        }
+
+        // Reset heading
+        updateAnnotatedHeading('editing');
+
+        // Remove active state from all buttons
+        document.querySelectorAll('.lab-btn').forEach(btn => btn.classList.remove('active'));
+
+        M.toast({ html: 'Canvas reset successfully!' });
+    }
+
+    function redrawCanvas() {
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // Redraw lines with their own color
+        lines.forEach(line => {
+            ctx.font = '16px Arial';
+            ctx.strokeStyle = line.color || GLOBAL_LINE_COLOR;
+            ctx.fillStyle   = line.color || GLOBAL_LINE_COLOR;
+            ctx.lineWidth = LINE_WIDTH;
+
+            if (line.type === 'horizontal' || line.type === 'min' || line.type === 'max') {
+                ctx.beginPath();
+                ctx.moveTo(0, line.y / window.scaleFactor);
+                ctx.lineTo(canvas.width, line.y / window.scaleFactor);
+                ctx.stroke();
+                if (line.text) {
+                    ctx.fillText(line.text, 10, line.y / window.scaleFactor - 5);
+                }
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(line.x / window.scaleFactor, 0);
+                ctx.lineTo(line.x / window.scaleFactor, canvas.height);
+                ctx.stroke();
+                if (line.text) {
+                    ctx.fillText(line.text, line.x / window.scaleFactor + 5, 10);
+                }
+            }
+        });
+
+        // Remove existing delete icons and re-add tinted ones
+        document.querySelectorAll('.delete-icon').forEach(el => el.remove());
+        lines.forEach(line => {
+            if (line.type === 'horizontal' || line.type === 'min' || line.type === 'max') {
+                addDeleteIcon(line, 10, line.y / window.scaleFactor);
+            } else {
+                addDeleteIcon(line, line.x / window.scaleFactor, 10);
+            }
+        });
+
+        // Redraw spots with their color
+        spots.forEach(spot => {
+            let x = spot.x / window.scaleFactor;
+            let y = spot.y / window.scaleFactor;
+
+            ctx.strokeStyle = spot.color || 'orange';
+            ctx.lineWidth = LINE_WIDTH;
+            ctx.beginPath();
+            ctx.arc(x, y, SPOT_RADIUS, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // Optional: indicate active spot with a small center dot
+            if (activeSpotId === spot.id) {
+                ctx.beginPath();
+                ctx.arc(x, y, SPOT_RADIUS, 0, 2 * Math.PI);
+                ctx.fillStyle = spot.color || 'orange';
+                ctx.fill();
+            }
+        });
+    }
+
+    function selectImageSource(source) {
+        imageSource = source;
+        isLocalImage = (source === 'local');
+
+        document.getElementById('eln-source-btn').classList.toggle('active', source === 'eln');
+        document.getElementById('eln-source-btn').classList.toggle('btn-lab-primary', source === 'eln');
+        document.getElementById('eln-source-btn').classList.toggle('btn-lab-outline', source !== 'eln');
+
+        document.getElementById('local-source-btn').classList.toggle('active', source === 'local');
+        document.getElementById('local-source-btn').classList.toggle('btn-lab-primary', source === 'local');
+        document.getElementById('local-source-btn').classList.toggle('btn-lab-outline', source !== 'local');
+
+        document.getElementById('local-upload-section').style.display =
+            source === 'local' ? 'block' : 'none';
+
+        if (source === 'eln') {
+            window.localImageData = null;
+            window.localImagePath = null;
+            loadELNImage();
+        }
+    }
+
+    function handleLocalImageUpload(event) {
+        const file = event.target.files && event.target.files[0];
+        if (file) handleLocalImageFile(file);
+    }
+
+    async function uploadLocalImageToServer(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/upload-local-image/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || 'Unable to upload image.');
+        }
+
+        return response.json();
+    }
+
+    function handleLocalImageFile(file) {
+        if (!file.type.startsWith('image/')) {
+            M.toast({ html: 'Please select a valid image file.', classes: 'red lighten-1' });
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            M.toast({ html: 'File size should be less than 10MB.', classes: 'red lighten-1' });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const imageDataUrl = e.target.result;
+            const probe = new Image();
+
+            probe.onload = async function () {
+                window.canvasWidth  = probe.naturalWidth;
+                window.canvasHeight = probe.naturalHeight;
+
+                window.localImageData = imageDataUrl;
+                window.localImagePath = null;
+
+                try {
+                    const uploaded = await uploadLocalImageToServer(file);
+                    window.localImagePath = uploaded.imagePath;
+                } catch (err) {
+                    console.warn('Local upload fallback to base64 mode:', err);
+                }
+
+                loadLocalImage(imageDataUrl, file.name);
+            };
+            probe.onerror = function () {
+                M.toast({ html: 'Failed to read the image. Please try again.', classes: 'red lighten-1' });
+            };
+            probe.src = imageDataUrl;
+        };
+        reader.onerror = function () {
+            M.toast({ html: 'Could not read the file.', classes: 'red lighten-1' });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function loadLocalImage(dataURL, fileName) {
+        window.image = image;
+
+        image.onload = function () {
+            const nw = image.naturalWidth  || image.width;
+            const nh = image.naturalHeight || image.height;
+
+            const panel = document.querySelector('.images-grid .image-panel');
+            const style = getComputedStyle(panel);
+            const padX  = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+            const maxW  = Math.max(320, Math.floor(panel.clientWidth - padX));
+            const maxH  = 620;
+
+            const scale = Math.min(maxW / nw, maxH / nh, 1);
+            const dw = Math.round(nw * scale);
+            const dh = Math.round(nh * scale);
+
+            canvas.width  = dw;
+            canvas.height = dh;
+
+            ctx.setTransform(1,0,0,1,0,0);
+            ctx.clearRect(0, 0, dw, dh);
+            ctx.drawImage(image, 0, 0, dw, dh);
+
+            window.scaleFactor = nh / dh;
+
+            const container = document.getElementById('canvas-container');
+            if (container) {
+                container.style.width  = dw + 'px';
+                container.style.height = dh + 'px';
+            }
+
+            const annotated = document.getElementById('annotated-image');
+            annotated.style.width     = dw + 'px';
+            annotated.style.height    = dh + 'px';
+            annotated.style.maxWidth  = dw + 'px';
+            annotated.style.maxHeight = dh + 'px';
+
+            window.currentImageFileName = fileName;
+            isLocalImage = true;
+
+            // clear annotations & table
+            lines = [];
+            spots = [];
+            activeSpotId = null;
+            nextColorIdx = 0;
+
+            document.querySelectorAll('.delete-icon').forEach(el => el.remove());
+            const tb = document.querySelector('#values-table tbody');
+            if (tb) tb.innerHTML = '';
+
+            M.toast({html: `Image "${fileName}" loaded successfully!`, classes: 'green lighten-1'});
+            updateAnnotatedHeading('editing');
+        };
+
+        image.src = dataURL;
+    }
+
+    // Function to download annotated image for local images
+    function downloadAnnotatedImage() {
+        const annotatedImage = document.getElementById("annotated-image");
+        if (annotatedImage && annotatedImage.src) {
+            const link = document.createElement('a');
+            link.download = `annotated_${window.currentImageFileName || 'tlc_image.png'}`;
+            link.href = annotatedImage.src;
+            link.click();
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Annotated image downloaded successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: 'No annotated image available for download. Please calculate RF values first.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    function loadELNImage() {
+        isLocalImage = false;
+        if (window.decodedImageUrl) {
+            fetch('/fetch-image/?url=' + encodeURIComponent(window.decodedImageUrl))
+            .then(response => response.json())
+            .then(data => {
+                if (data.imagePath) {
+                    return fetch('/serve-image/?file_path=' + encodeURIComponent(data.imagePath));
+                } else {
+                    M.toast({html: 'ELN image not found.'});
+                }
+            })
+            .then(response => {
+                if (response && response.ok) {
+                    image.src = '/serve-image/?file_path=' + encodeURIComponent(
+                        new URL(response.url).searchParams.get('file_path')
+                    );
+                    updateAnnotatedHeading('editing');
+                } else if (response) {
+                    M.toast({html: 'Error loading ELN image.'});
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching ELN image:', err);
+                M.toast({html: 'Error loading ELN image.'});
+            });
+        }
+    }
+
+    // Prevent default drag behaviors
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Clear all annotations
+    function clearAnnotations() {
+        if (window.lines) window.lines = [];
+        if (window.spots) window.spots = [];
+        activeSpotId = null;
+        nextColorIdx = 0;
+
+        if (window.canvas && window.ctx) {
+            redrawCanvas();
+        }
+
+        const tableBody = document.querySelector('#values-table tbody');
+        if (tableBody) {
+            tableBody.innerHTML = '';
+        }
+
+        M.toast({html: 'All annotations cleared'});
+    }
+
+    // Reset entire application
+    function resetApplication() {
+        clearAnnotations();
+        selectImageSource('local');
+
+        if (window.canvas && window.ctx) {
+            window.ctx.clearRect(0, 0, window.canvas.width, window.canvas.height);
+        }
+
+        const annotatedImage = document.getElementById('annotated-image');
+        if (annotatedImage) {
+            annotatedImage.src = '';
+        }
+
+        const fileInput = document.getElementById('local-image-input');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        updateAnnotatedHeading('instructions');
+        M.toast({html: 'Application reset successfully'});
+    }
+
+    // Cancel current annotation
+    function cancelCurrentAnnotation() {
+        window.isDrawing = false;
+        window.currentAnnotationMode = null;
+        addingSpots = false;
+
+        if (window.canvas) {
+            window.canvas.style.cursor = 'default';
+        }
+
+        canvas.removeEventListener('click', drawSpot);
+        canvas.removeEventListener('click', drawLine);
+    }
+
+    // Set annotation mode and update button states
+    function setAnnotationMode(mode) {
+        window.currentAnnotationMode = mode;
+
+        document.querySelectorAll('.lab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        if (window.canvas) {
+            window.canvas.style.cursor = mode === 'spot' ? 'crosshair' : 'crosshair';
+        }
+    }
+
+    // Adjust canvas for window resize
+    function adjustCanvasForResize() {
+        if (image && image.complete && canvas) {
+            redrawCanvas();
+        }
+    }
+
+    // Show initial instructions
+    function showInitialInstructions() {
+        updateAnnotatedHeading('instructions');
+    }
+
+    // Error handler
+    function handleError(error, context = '') {
+        console.error(`Error in ${context}:`, error);
+        Swal.fire({
+            title: 'Error!',
+            text: `An error occurred${context ? ' in ' + context : ''}. Please try again.`,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    }
+
+
+function autoDetectSpots() {
+  const minLine = lines.find(l => l.type === 'min');
+  const maxLine = lines.find(l => l.type === 'max');
+
+  if (!minLine || !maxLine) {
+    M.toast({ html: 'Please add Min and Max lines first.' });
+    return;
+  }
+
+  const imagePayload = getImageRequestPayload();
+
+  const payload = {
+    isLocalImage: imagePayload.isLocalImage,
+    imageSrc: imagePayload.imageSrc,
+    imageData: imagePayload.imageData,
+    localImagePath: imagePayload.localImagePath,
+
+    // IMPORTANT: these are IMAGE-space already
+    minY: minLine.y,
+    maxY: maxLine.y
+  };
+
+  fetch('/auto_detect_spots/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.error) {
+      console.error(res);
+      Swal.fire('Error', res.error, 'error');
+      return;
+    }
+
+    // merge detected spots into your existing spots array
+    const detected = res.spots || [];
+    detected.forEach(s => {
+      spots.push({
+        id: Date.now() + Math.random(),
+        x: s.x,
+        y: s.y,
+        color: colorPalette[nextColorIdx++ % colorPalette.length]
+      });
+    });
+
+    redrawCanvas();
+    M.toast({ html: `Detected ${detected.length} spots.` });
+  })
+  .catch(err => {
+    console.error(err);
+    Swal.fire('Error', 'Auto detect failed (server error).', 'error');
+  });
+}
+
+function autoDetectLines() {
+  const imagePayload = getImageRequestPayload();
+
+  const payload = {
+    isLocalImage: imagePayload.isLocalImage,
+    imageSrc: imagePayload.imageSrc,
+    imageData: imagePayload.imageData,
+    localImagePath: imagePayload.localImagePath
+  };
+
+  Swal.fire({
+    title: 'Detecting Min/Max Lines...',
+    text: 'Running line model inference.',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  fetch('/auto_detect_lines/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(res => {
+    Swal.close();
+    if (res.error) {
+      Swal.fire('Error', res.error, 'error');
+      return;
+    }
+
+    const minY_img = res.minY;
+    const maxY_img = res.maxY;
+
+    if (typeof minY_img !== 'number' || typeof maxY_img !== 'number') {
+      Swal.fire('Error', 'Invalid line output from server.', 'error');
+      return;
+    }
+
+    // Remove existing min/max if present (so it can re-detect)
+    lines = lines.filter(l => !['min','max'].includes(l.type));
+
+    // Add new min/max lines in IMAGE space.
+    // Semantics stay consistent with manual mode:
+    // - min = bottom baseline
+    // - max = top solvent front
+    lines.push({
+      id: Date.now(),
+      type: 'min',
+      y: minY_img,
+      text: 'min',
+      color: GLOBAL_LINE_COLOR,
+      ownerSpotId: null
+    });
+
+    lines.push({
+      id: Date.now() + 1,
+      type: 'max',
+      y: maxY_img,
+      text: 'max',
+      color: GLOBAL_LINE_COLOR,
+      ownerSpotId: null
+    });
+
+    redrawCanvas();
+    updateAnnotatedHeading('editing');
+    M.toast({ html: 'Min/Max lines detected and drawn.' });
+  })
+  .catch(err => {
+    Swal.close();
+    console.error(err);
+    Swal.fire('Error', 'Auto detect lines failed (server error).', 'error');
+  });
+}
+
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+// ---- Step 1: Safely extract single query param ----
+  const params = new URL(window.location.href).searchParams;
+  const encodedUrl = params.get('url') || '';
+  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+
+  // Make available globally for downstream processes
+  window.decodedImageUrl = decodedUrl;
+  window.decodedPostUrl  = decodedUrl; // single-source-of-truth
+
+  let validRemoteUrl = '';
+  if (!decodedUrl) {
+    console.info('No "url" parameter found; local upload mode is available.');
+  } else {
+    // ---- Step 2: Validate URL format defensively ----
+    try {
+      new URL(decodedUrl);
+      validRemoteUrl = decodedUrl;
+    } catch {
+      console.error('Invalid URL parameter:', decodedUrl);
+    }
+  }
+
+  // ---- Step 3: Define DOM targets ----
+  const imageContainer = document.getElementById('imageContainer');
+  let imageEl = document.getElementById('imageElement');
+  if (!imageEl) {
+    imageEl = new Image();
+    imageEl.id = 'imageElement';
+  }
+
+  // ---- Step 4: Fetch and serve image asynchronously ----
+  (async function loadAndRenderImage() {
+    if (!validRemoteUrl) return;
+
+    try {
+      const res = await fetch(`/fetch-image/?url=${encodeURIComponent(validRemoteUrl)}`);
+      const data = await res.json();
+
+      if (!data?.imagePath) {
+        throw new Error(data?.error || 'No imagePath from fetch-image');
+      }
+
+      const servedImageUrl = `/serve-image/?file_path=${encodeURIComponent(data.imagePath)}`;
+      console.log('Serving image:', servedImageUrl);
+
+      imageEl.src = servedImageUrl;
+      imageEl.alt = 'Fetched image';
+      imageEl.loading = 'lazy';
+      imageEl.decoding = 'async';
+
+      if (imageContainer && !imageContainer.contains(imageEl)) {
+        imageContainer.innerHTML = '';
+        imageContainer.appendChild(imageEl);
+      }
+
+      // Optional: trigger visual or functional updates
+      if (typeof updateAnnotatedHeading === 'function') {
+        updateAnnotatedHeading('editing');
+      }
+
+    } catch (err) {
+      console.error('ELN fetch error:', err);
+    }
+	 })();
+
+        // Initialize heading
+        updateAnnotatedHeading('instructions');
+
+        // Initialize globals
+        if (typeof lines === 'undefined') window.lines = [];
+        if (typeof spots === 'undefined') window.spots = [];
+        if (typeof isLocalImage === 'undefined') window.isLocalImage = false;
+        if (typeof imageSource === 'undefined') window.imageSource = 'local';
+        if (typeof scaleFactor === 'undefined') window.scaleFactor = 1;
+
+        window.canvas = canvas;
+        window.ctx = ctx;
+        window.image = image;
+
+        // Local upload handlers
+        const fileInput = document.getElementById('local-image-input');
+        const uploadArea = document.querySelector('.upload-area');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', handleLocalImageUpload);
+        }
+
+        if (uploadArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, function() {
+                    uploadArea.style.background = 'rgba(74, 144, 226, 0.1)';
+                    uploadArea.style.borderColor = 'var(--primary-blue)';
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, function() {
+                    uploadArea.style.background = 'var(--lab-light-gray)';
+                    uploadArea.style.borderColor = '#ddd';
+                }, false);
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleLocalImageFile(files[0]);
+                }
+            }, false);
+        }
+
+        // Canvas mouse handlers
+        if (canvas) {
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('dblclick', handleDoubleClick);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cancelCurrentAnnotation();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveImageToServer();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                calculateRF();
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', function() {
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(adjustCanvasForResize, 250);
+        });
+
+        // Check URL parameters for initial source
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasELNParams = urlParams.get('url');
+
+        if (hasELNParams) {
+            selectImageSource('eln');
+        } else {
+            selectImageSource('local');
+        }
+
+        // Initialize Materialize components (safe guards)
+        try {
+            const tooltips = document.querySelectorAll('.tooltipped');
+            if (tooltips.length > 0) M.Tooltip.init(tooltips);
+
+            const dropdowns = document.querySelectorAll('.dropdown-trigger');
+            if (dropdowns.length > 0) M.Dropdown.init(dropdowns);
+        } catch (error) {
+            console.warn('Materialize initialization error:', error);
+        }
+
+        M.toast({html: 'TLC Analyzer loaded successfully!', displayLength: 2000});
+        showInitialInstructions();
+    });
+</script>
+</body>
+</html>
