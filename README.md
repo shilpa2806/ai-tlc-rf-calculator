@@ -275,7 +275,7 @@ Example response:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/shilpaindl/ai-tlc-rf-calculator.git
+git clone https://github.com/shilpa2806/ai-tlc-rf-calculator.git
 cd ai-tlc-rf-calculator
 ```
 
@@ -393,14 +393,14 @@ git init
 git branch -M main
 git add .
 git commit -m "Initial commit"
-git remote add origin https://github.com/shilpaindl/ai-tlc-rf-calculator.git
+git remote add origin https://github.com/shilpa2806/ai-tlc-rf-calculator.git
 git push -u origin main
 ```
 
 If the remote already exists:
 
 ```bash
-git remote set-url origin https://github.com/shilpaindl/ai-tlc-rf-calculator.git
+git remote set-url origin https://github.com/shilpa2806/ai-tlc-rf-calculator.git
 git push -u origin main
 ```
 
