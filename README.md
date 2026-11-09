@@ -495,6 +495,15 @@ circle_detector/ml_models/line_best.onnx
 
 ## License
 
+The code is released under the MIT License. See [LICENSE](LICENSE).
+
+The trained models in `circle_detector/ml_models/` (`spot_best.onnx`,
+`line_best.onnx`) are not: they were trained and exported with Ultralytics
+YOLOv8 and are under the GNU Affero General Public License v3.0 (AGPL-3.0), as
+declared in their metadata. See
+[circle_detector/ml_models/LICENSE](circle_detector/ml_models/LICENSE). The
+AGPL-3.0 applies to them wherever they are used, including its conditions for
+running them as a network service.
 
 ## Maintainer
 
