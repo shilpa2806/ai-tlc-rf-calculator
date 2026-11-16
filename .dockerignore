@@ -1,0 +1,41 @@
+# Allowlist: the build context holds only what the image needs to build and
+# run, so local-only files (.env secrets, archives of test photos, stray
+# images, notes) can never reach /code. Anything new is excluded until listed.
+*
+
+# Dependencies (uv sync --no-install-project: the README is not needed).
+!pyproject.toml
+!uv.lock
+
+# The app.
+!manage.py
+!gunicorn.conf.py
+!config/
+!tlc/
+!LICENSE
+
+# MEDIA_ROOT exists and is owned by the app user (COPY --chown).
+!media/.gitkeep
+
+# Not needed at runtime, even inside the directories above.
+tlc/tests.py
+**/__pycache__/
+**/*.py[cod]
+**/.env
+**/*.env
+**/.env.*
+**/*.zip
+**/*.tar
+**/*.tar.*
+**/*.tgz
+**/*.7z
+**/*.rar
+**/.DS_Store
+
+# Photos: the app ships none (its static assets are CSS, JS and SVG).
+**/*.jpg
+**/*.jpeg
+**/*.JPG
+**/*.JPEG
+**/*.heic
+**/*.HEIC

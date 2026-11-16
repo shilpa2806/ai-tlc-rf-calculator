@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# ONNX model weights are binary; never let text=auto touch them.
+*.onnx binary

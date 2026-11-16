@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#2f6f4f"/>
+  <!-- TLC plate -->
+  <rect x="9" y="4" width="14" height="24" rx="1.5" fill="#eef3f0"/>
+  <!-- solvent front (max) and baseline (min) -->
+  <line x1="9" y1="8" x2="23" y2="8" stroke="#9aa7a0" stroke-width="1"/>
+  <line x1="9" y1="24" x2="23" y2="24" stroke="#9aa7a0" stroke-width="1"/>
+  <!-- spots -->
+  <circle cx="14" cy="18" r="2" fill="#e08a2e"/>
+  <circle cx="19" cy="14" r="2" fill="#e08a2e"/>
+</svg>

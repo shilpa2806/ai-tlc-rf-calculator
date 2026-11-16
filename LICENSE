@@ -25,8 +25,8 @@ SOFTWARE.
 
 The model files are not covered by the MIT License above.
 
-The trained detection models in circle_detector/ml_models/ (spot_best.onnx
-and line_best.onnx) were trained and exported with Ultralytics YOLOv8 and are
+The trained detection models in tlc/ml_models/ (spot_best.onnx and
+line_best.onnx) were trained and exported with Ultralytics YOLOv8 and are
 licensed under the GNU Affero General Public License, version 3 (AGPL-3.0),
 as declared in their metadata. The full text of that license is in
-circle_detector/ml_models/LICENSE.
+tlc/ml_models/LICENSE.

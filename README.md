@@ -1,510 +1,149 @@
-# AI TLC RF Calculator
+# TLC RF Calculator
 
-AI TLC RF Calculator is a Django web application for Thin Layer Chromatography (TLC) image analysis. The app loads TLC plate images from an ELN image URL or a local upload, supports browser-based annotation, runs ONNX model inference for spot and line detection, calculates RF values, and produces annotated image and CSV outputs.
+A web tool for measuring **retention factor (Rf)** values on photos of **thin
+layer chromatography (TLC)** plates.
 
-![TLC quick guide](circle_detector/images/initial-quick-guide.png)
-
-## Repository Information
-
-```text
-Repository name: ai-tlc-rf-calculator
-Application folder: aitlcapp
-Django project: rf_calculator
-Django app: circle_detector
-Primary page title: TLC Image Annotation Tool
-```
-
-## What This App Does
-
-- Loads TLC images from an ELN-style URL passed through the page query string.
-- Supports local TLC image upload with drag-and-drop or file selection.
-- Displays the TLC image on a browser canvas for annotation.
-- Adds and edits TLC spot markers.
-- Adds Min and Max reference lines for RF calculation.
-- Adds horizontal compound reference lines.
-- Adds vertical mixture, solvent, or lane reference lines.
-- Runs automatic Min/Max line detection using `line_best.onnx`.
-- Runs automatic TLC spot detection using `spot_best.onnx`.
-- Calculates RF values from spot position and Min/Max line geometry.
-- Skips invalid RF values outside the `0.0` to `1.0` range.
-- Draws annotated spots, RF values, compound labels, solvent labels, and reference lines on the output image.
-- Exports RF result data as CSV.
-- Provides browser actions to download CSV, save annotated image, and upload outputs back to the configured ELN endpoint.
-
-## Application Workflow
-
-1. Open the TLC annotation page.
-2. Select **From ELN** or **Upload Local** as the image source.
-3. For ELN mode, the app reads the `url` query parameter and fetches the image through `/fetch-image/`.
-4. For local mode, the selected image is uploaded through `/upload-local-image/`.
-5. Add Min and Max lines manually or use **Auto Detect Lines**.
-6. Add TLC spots manually or use **Auto Detect Spots** after Min/Max lines are available.
-7. Add horizontal and vertical annotation labels when needed.
-8. Click **Calculate RF**.
-9. Review the RF table and annotated TLC image.
-10. Export the CSV or annotated image.
-
-## Tech Stack
-
-| Area | Technology |
-|---|---|
-| Backend framework | Django `>=3.2,<4.0` |
-| Runtime image | Python `3.9` Docker base image |
-| HTTP server | Gunicorn `20.1.0` |
-| Static dependency | WhiteNoise `6.6.0` |
-| HTTP client | Requests `2.32.3` |
-| Computer vision | OpenCV Headless `4.6.0.66` |
-| Numerical processing | NumPy `1.26.4` |
-| Image handling | Pillow `10.2.0` |
-| ONNX inference | ONNX Runtime `1.19.2` |
-| ML utilities | scikit-learn `1.2.2`, Matplotlib `3.7.1` |
-| Frontend | HTML, CSS, JavaScript |
-| UI libraries | Materialize CSS, SweetAlert2, Google Material Icons |
-| Database | SQLite by default |
-
-## Project Structure
+Load a photo of a plate, from your computer or straight from the Chemotion
+electronic lab notebook (ELN). Two trained models propose the baseline, the
+solvent front and the spots; you check and correct them in the browser. The
+tool then computes the Rf of every spot, draws a numbered, annotated image,
+and exports the results as CSV, or sends them back to the ELN.
 
 ```text
-aitlcapp/
-├── circle_detector/
-│   ├── images/
-│   │   └── initial-quick-guide.png
-│   ├── migrations/
-│   │   └── __init__.py
-│   ├── ml_models/
-│   │   ├── __init__.py
-│   │   ├── line_best.onnx
-│   │   └── spot_best.onnx
-│   ├── static/
-│   │   └── images/
-│   │       └── initial-quick-guide.png
-│   ├── templates/
-│   │   └── circle_detector/
-│   │       ├── annotate.html
-│   │       ├── result.html
-│   │       └── upload.html
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── line_onnx.py
-│   ├── models.py
-│   ├── spot_onnx.py
-│   ├── tests.py
-│   ├── urls.py
-│   └── views.py
-├── rf_calculator/
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── static/
-├── .dockerignore
-├── .gitattributes
-├── Dockerfile
-├── manage.py
-└── requirements.txt
+Rf = (distance from baseline to spot) / (distance from baseline to solvent front)
 ```
 
-## ONNX Model Files
+Rf runs from 0 (a spot on the baseline) to 1 (a spot at the solvent front).
+Spots outside that range are left out.
 
-The app loads both ONNX models during Django startup:
+## Using the tool
 
-```text
-circle_detector/ml_models/spot_best.onnx
-circle_detector/ml_models/line_best.onnx
-```
+1. **Load a plate photo.** Choose **Upload local** (drag and drop, or pick a
+   JPG, PNG or WebP of up to 25 MB; phone photos of 50 megapixels are fine), or
+   **From ELN** when Chemotion opened the tool. Optionally note the
+   **Mobile phase** (solvent mixture, e.g. *CH/EtOAc 4:1*) and the
+   **Stationary phase** (plate material, e.g. *silica gel 60 F254*); both are
+   recorded with the result.
+2. **Straighten it if needed.** Rf compares heights, so the baseline should be
+   level. **Rotate** turns the photo by a quarter turn (0°, 90°, 180°, 270°);
+   the box next to it fine-tunes by up to ±45°, and the arrows step by 0.5°.
+   Rotation is available until you start annotating.
+3. **(Optional) Draw a Plate Area.** Click **Plate Area** and drag a box around
+   the plate. Detection then ignores everything outside it, which helps on
+   photos with a lot of background. **Crop view** zooms to the box, with a
+   small margin around it.
+4. **Place the baseline and solvent front.** **Suggest Lines** proposes them;
+   or click **Min Line** and click on the baseline (where the samples were
+   applied), then **Max Line** and click on the solvent front. Drag either
+   line to adjust it. Min is drawn in yellow, Max in magenta. If only one
+   line is found, the other is an estimate: it is dashed and labelled
+   *Min (estimate)* or *Max (estimate)* until you drag it into place.
+5. **Mark the spots.** **Suggest Spots** searches between the two lines and
+   proposes candidates; **Add Spots** places them by hand. Check for spots it
+   missed (faint or touching spots in particular). Drag a spot to move it;
+   double-click (double-tap on a touch screen) to delete it.
+6. **(Optional) Label lanes and compounds.** **V-Line** marks a lane and
+   **H-Line** a compound. Pick a type from the list (for example *starting
+   material* or *product 1*), type a label, or both. The ✎ beside a marker
+   edits it later. Each spot belongs to the nearest lane and the nearest
+   compound marker; an unlabelled lane is left blank and an unmarked compound
+   shows as "Unknown".
+7. **Click Calculate RF.** The results table and the annotated image appear.
+   Rows are numbered, sorted by lane and then by Rf, and the same number
+   stands next to each spot on the image. Click a row to ring its spot on
+   both images.
+8. **Export.** Download the **CSV**, the annotated **Image** or the
+   **Annotations** file, or all three as one ZIP with **Download all**; for a
+   plate from the ELN, upload any of them back to it. The files are named
+   after the photo and the time of the result, e.g.
+   `plate7_2026-11-16_14-32_rf.csv`, `..._annotated.png` and
+   `..._annotations.json` (`tlc_plate_...` for an ELN image). **Copy Rf
+   summary** copies the Rf values as one line in the style of Chemotion's TLC
+   description, e.g. `TLC (CH/EtOAc 4:1); Rf (UV-Vis in nm, staining) =
+   0.53 (SM)[h1], ...`, to paste into the ELN.
 
-Current model configuration from `rf_calculator/settings.py`:
+### Good to know
 
-```python
-SPOT_MODEL_PATH = BASE_DIR / "circle_detector" / "ml_models" / "spot_best.onnx"
-SPOT_IMGSZ_DEFAULT = 1280
-SPOT_CONF_DEFAULT = 0.15
-TLC_BAND_MARGIN = 12
+- **Suggested lines and spots are only suggestions.** The models can be
+  wrong or miss a spot. Nothing is calculated until you have checked them and
+  clicked **Calculate RF**.
+- **Undo and redo** every edit with the toolbar arrows or **Ctrl+Z** /
+  **Ctrl+Y** (**Ctrl+Shift+Z**).
+- **Your work is kept.** The annotations of each image are saved in your
+  browser as you go. If the page is reloaded, loading the same photo again
+  offers to restore them. **Reset** clears the annotations and that saved
+  copy.
+- **Annotations file.** The downloaded *Annotations* file (JSON) holds the
+  lines, spots, labels, rotation, Plate Area and the mobile and stationary
+  phase. **Open annotations** loads it
+  back onto the same photo, to check a result later or continue it. It is
+  refused for a different photo.
+- **What the CSV records.** Besides the results, each spot's source (placed by
+  hand, detected, or detected and then moved) and, at the end, how the result
+  was made: app version, the photo's name and checksum, rotation, Plate Area,
+  mobile and stationary phase, the two models and the time of calculation.
+  Its *Details* line is the Rf summary, with the mobile phase in place of
+  "solvents" when given.
+- **Labels on the image.** By default each spot carries its number. Tick
+  **full labels** to add its Rf, compound and lane. Labels on the plate are
+  sized from the photo, as on the saved image. **Text size** (10–500%)
+  scales the text of the saved image; changing it or **full labels** redraws
+  the annotated image without a recalculation.
+- **Out-of-date results are flagged.** If you change anything after
+  calculating, a banner says so and export stays disabled until you
+  recalculate, so an outdated image is never saved.
+- **Help** (toolbar) has a short step-by-step reminder. Light and dark themes
+  switch at the top right.
 
-LINE_MODEL_PATH = BASE_DIR / "circle_detector" / "ml_models" / "line_best.onnx"
-LINE_IMGSZ_DEFAULT = 1024
-LINE_CONF_DEFAULT = 0.05
-```
+### Tips for good results
 
-Model file sizes in the uploaded app package:
+- Photograph the plate straight on, well lit, at high resolution.
+- Straighten the photo first if the baseline is not level.
+- On photos with much background, draw the Plate Area before detecting.
+- Check the proposed lines before suggesting spots: spots are searched only
+  between them.
 
-```text
-line_best.onnx: about 12 MB
-spot_best.onnx: about 44 MB
-```
+## For developers and deployers
 
-## RF Calculation Logic
+A Django 5.2 app with a vanilla JavaScript front end, no database, and two
+ONNX models for detection. See:
 
-The backend calculates RF values in `circle_detector/views.py` using the spot position and selected reference lines:
+- **[docs/architecture.md](docs/architecture.md)**: design, module map,
+  detection, security, memory use, testing, and deployment (Docker,
+  environment variables).
+- **[docs/eln-integration.md](docs/eln-integration.md)**: the Chemotion
+  third-party-app contract and its deployment requirements.
+- **[CHANGELOG.md](CHANGELOG.md)**: what changed in each version.
 
-```python
-rf_value = (spot_y - min_line_y) / (max_line_y - min_line_y)
-rf_value = round(rf_value, 2)
-```
-
-Only RF values strictly between `0.0` and `1.0` are included in the CSV and response.
-
-The CSV columns generated by the app are:
-
-```text
-Solvent (X value), Compound (Y value), RF value
-```
-
-The frontend download CSV action uses these column names:
-
-```text
-mixture_label (X axis), substance_label (Y axis), RF value
-```
-
-## API Endpoints
-
-| Method | Endpoint | Function |
-|---|---|---|
-| GET | `/` | Opens the TLC annotation interface. |
-| POST | `/upload-local-image/` | Uploads a local TLC image to `media/local_uploads/`. |
-| GET | `/fetch-image/?url=...` | Downloads an ELN/remote image and stores it as `media/downloaded_image.png`. |
-| GET | `/serve-image/?file_path=...` | Serves an image file path back to the browser. |
-| POST | `/auto_detect_lines/` | Runs `line_best.onnx` and returns Min/Max line positions. |
-| POST | `/auto_detect_spots/` | Runs `spot_best.onnx` inside the Min/Max band and returns detected spot centers. |
-| POST | `/calculate_rf/` | Calculates RF values and creates annotated image plus CSV files. |
-| GET | `/admin/` | Django admin route. |
-
-## Endpoint Payloads
-
-### Auto Detect Lines
-
-```json
-{
-  "isLocalImage": true,
-  "imageSrc": "local_upload.png",
-  "imageData": "data:image/png;base64,...",
-  "localImagePath": "local_uploads/image.png"
-}
-```
-
-Example response:
-
-```json
-{
-  "minY": 120.5,
-  "maxY": 740.2,
-  "debug": {
-    "image_size": [1024, 768],
-    "conf": 0.05,
-    "raw_detections": 2
-  }
-}
-```
-
-### Auto Detect Spots
-
-```json
-{
-  "isLocalImage": true,
-  "imageSrc": "local_upload.png",
-  "imageData": "data:image/png;base64,...",
-  "localImagePath": "local_uploads/image.png",
-  "minY": 120.5,
-  "maxY": 740.2
-}
-```
-
-Example response:
-
-```json
-{
-  "spots": [
-    {
-      "x": 300.4,
-      "y": 420.8,
-      "conf": 0.86
-    }
-  ],
-  "debug": {
-    "image_size": [1024, 768],
-    "roi": [0, 108, 1024, 752],
-    "minY": 120.5,
-    "maxY": 740.2,
-    "kept": 1
-  }
-}
-```
-
-### Calculate RF
-
-```json
-{
-  "lines": [
-    {"type": "min", "y": 700},
-    {"type": "max", "y": 100},
-    {"type": "vertical", "x": 300, "text": "Mixture A"},
-    {"type": "horizontal", "y": 420, "text": "Compound A"}
-  ],
-  "spots": [
-    {"x": 300, "y": 420}
-  ],
-  "imageSrc": "downloaded_image.png",
-  "isLocalImage": false,
-  "canvasWidth": 1024,
-  "canvasHeight": 768,
-  "scaleFactor": 1
-}
-```
-
-Example response:
-
-```json
-{
-  "rf_values": [
-    {
-      "compound": "Compound A",
-      "solvent": "Mixture A",
-      "rf": 0.47
-    }
-  ],
-  "annotated_image_url": "/media/annotated_downloaded_image_1772283241.png",
-  "csv_url": "/media/rf_values_downloaded_image_1772283241.csv",
-  "message": "Successfully calculated RF values for 1 spots"
-}
-```
-
-## Local Setup
-
-### 1. Clone the repository
+Quick start:
 
 ```bash
-git clone https://github.com/shilpa2806/ai-tlc-rf-calculator.git
-cd ai-tlc-rf-calculator
+uv sync
+DEBUG=True uv run python manage.py runserver   # then open http://localhost:8000/
 ```
 
-### 2. Create a virtual environment
-
-Windows:
-
-```powershell
-python -m venv venv
-venv\Scripts\activate
-```
-
-macOS/Linux:
+A deployment needs only `ALLOWED_HOSTS` and, for the ELN, `ELN_ORIGIN`:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### 4. Set local environment variables
-
-Windows PowerShell:
-
-```powershell
-$env:SECRET_KEY="django-insecure-local-development-ai-tlc-rf-calculator"
-$env:DEBUG="True"
-$env:ALLOWED_HOSTS="localhost,127.0.0.1,172.22.211.68"
-```
-
-macOS/Linux:
-
-```bash
-export SECRET_KEY="django-insecure-local-development-ai-tlc-rf-calculator"
-export DEBUG="True"
-export ALLOWED_HOSTS="localhost,127.0.0.1,172.22.211.68"
-```
-
-### 5. Apply migrations
-
-```bash
-python manage.py migrate
-```
-
-### 6. Run the development server
-
-```bash
-python manage.py runserver
-```
-
-Local URL:
-
-```text
-http://127.0.0.1:8000/
-```
-
-## Docker Setup
-
-Build the Docker image:
-
-```bash
-docker build -t ai-tlc-rf-calculator .
-```
-
-Run the Docker container:
-
-```bash
+docker build -t tlc-rf-calculator .
 docker run --rm -p 8050:8050 \
-  -e SECRET_KEY="django-insecure-local-development-ai-tlc-rf-calculator" \
-  -e DEBUG="False" \
-  -e ALLOWED_HOSTS="localhost,127.0.0.1" \
-  ai-tlc-rf-calculator
+  -e ALLOWED_HOSTS="tlc.example.org" -e ELN_ORIGIN="https://eln.example.org" \
+  tlc-rf-calculator
 ```
 
-Docker URL:
+## Authors
 
-```text
-http://localhost:8050/
-```
+Shilpa Bai Thotli, Nicole Jung, and contributors
 
-The included Dockerfile uses:
-
-```text
-FROM python:3.9
-WORKDIR /code
-EXPOSE 8050
-CMD gunicorn rf_calculator.wsgi:application --bind 0.0.0.0:8050
-```
-
-## Environment Variables
-
-| Variable | Used In | Purpose |
-|---|---|---|
-| `SECRET_KEY` | `rf_calculator/settings.py` | Django cryptographic signing key. |
-| `DEBUG` | `rf_calculator/settings.py` | Enables or disables Django debug mode. |
-| `ALLOWED_HOSTS` | `rf_calculator/settings.py` | Comma-separated host allowlist. |
-
-Default values currently present in the uploaded app:
-
-```python
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1,172.22.211.68
-```
-
-## GitHub Push Commands
-
-```bash
-git init
-git branch -M main
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/shilpa2806/ai-tlc-rf-calculator.git
-git push -u origin main
-```
-
-If the remote already exists:
-
-```bash
-git remote set-url origin https://github.com/shilpa2806/ai-tlc-rf-calculator.git
-git push -u origin main
-```
-
-## Files to Keep Out of Git
-
-The uploaded app package contains runtime and generated files. These should stay out of GitHub:
-
-```text
-.git/
-db.sqlite3
-media/
-staticfiles/
-__pycache__/
-*.pyc
-.env
-venv/
-```
-
-Recommended `.gitignore`:
-
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-
-# Virtual environments
-venv/
-.venv/
-env/
-
-# Django
-db.sqlite3
-staticfiles/
-media/
-
-# Environment
-.env
-.env.*
-
-# OS and editor files
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-```
-
-## Production Readiness Notes
-
-The current app is ready for GitHub and can run with Django or Docker. For public production deployment, the following operational items should be completed:
-
-- Set `DEBUG=False`.
-- Generate and set a secure `SECRET_KEY` in the hosting environment.
-- Set `ALLOWED_HOSTS` to the deployed domain.
-- Add `whitenoise.middleware.WhiteNoiseMiddleware` or serve static files through a web server/CDN.
-- Move from SQLite to PostgreSQL or another managed database for multi-user usage.
-- Use persistent media storage for uploaded TLC images, annotated images, and generated CSV files.
-- Restrict `/fetch-image/` to trusted ELN or image-host domains.
-- Avoid exposing absolute server file paths through `/serve-image/`.
-- Remove `csrf_exempt` from POST endpoints or protect them with the final authentication flow.
-- Add authentication before exposing the app outside a private lab or ELN network.
-- Run `python manage.py check --deploy` before go-live.
-
-## Troubleshooting
-
-### ONNX model loading error
-
-Check that both model files exist:
-
-```text
-circle_detector/ml_models/spot_best.onnx
-circle_detector/ml_models/line_best.onnx
-```
-
-### No spots detected
-
-- Draw Min and Max lines first.
-- Verify the TLC spots are inside the Min/Max band.
-- Review `SPOT_CONF_DEFAULT` in `rf_calculator/settings.py`.
-
-### No lines detected
-
-- Use a clearer TLC image.
-- Review `LINE_CONF_DEFAULT` in `rf_calculator/settings.py`.
-
-### No RF values returned
-
-- Confirm that at least one spot is between the Min and Max lines.
-- RF values outside `0.0` and `1.0` are skipped.
-- Confirm that canvas width and height are passed in the `/calculate_rf/` payload.
+Karlsruhe Institute of Technology (KIT), Germany.
 
 ## License
 
-The code is released under the MIT License. See [LICENSE](LICENSE).
+The code is under the MIT License, see [LICENSE](LICENSE).
 
-The trained models in `circle_detector/ml_models/` (`spot_best.onnx`,
-`line_best.onnx`) are not: they were trained and exported with Ultralytics
-YOLOv8 and are under the GNU Affero General Public License v3.0 (AGPL-3.0), as
-declared in their metadata. See
-[circle_detector/ml_models/LICENSE](circle_detector/ml_models/LICENSE). The
-AGPL-3.0 applies to them wherever they are used, including its conditions for
-running them as a network service.
-
-## Maintainer
-
-Shilpa Thotli
+The trained models in `tlc/ml_models/` (`spot_best.onnx`, `line_best.onnx`)
+are not: they were trained and exported with Ultralytics YOLOv8 and are under
+the GNU Affero General Public License v3.0 (AGPL-3.0), as declared in their
+metadata. See [tlc/ml_models/LICENSE](tlc/ml_models/LICENSE). The AGPL-3.0
+applies to them wherever they are used, including its conditions for running
+them as a network service.

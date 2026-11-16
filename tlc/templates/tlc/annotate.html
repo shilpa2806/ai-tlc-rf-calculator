@@ -1,0 +1,377 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLC RF Calculator</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'tlc/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'tlc/app.css' %}">
+</head>
+<body data-max-image-mb="{{ max_image_mb }}" data-app-version="{{ version }}">
+
+<!-- Icon sprite (Feather-style, stroked with currentColor) -->
+<svg width="0" height="0" class="icon-sprite" aria-hidden="true">
+    <defs>
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+            <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+            <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+            <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></symbol>
+            <symbol id="i-hline" viewBox="0 0 24 24"><path d="M3 12h18"/></symbol>
+            <symbol id="i-vline" viewBox="0 0 24 24"><path d="M12 3v18"/></symbol>
+            <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4V2M15 10V8M8.5 8.5 7 7M20.5 8.5 22 7M4 20l10-10M18 12l3 3"/></symbol>
+            <symbol id="i-region" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/></symbol>
+            <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M8 18h6"/></symbol>
+            <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></symbol>
+            <symbol id="i-rotate-cw" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></symbol>
+            <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></symbol>
+            <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-4"/></symbol>
+            <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h4"/></symbol>
+            <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+            <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+            <symbol id="i-cloud-up" viewBox="0 0 24 24"><path d="M16 16l-4-4-4 4M12 12v9M20.4 14.5A5 5 0 0 0 18 5h-1.26A8 8 0 1 0 3 15.3"/></symbol>
+            <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h0"/></symbol>
+            <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h0"/></symbol>
+            <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+            <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+            <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+            <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+            <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+        </g>
+    </defs>
+</svg>
+
+<div class="main-container">
+    <div class="header">
+        <h1>TLC RF Calculator</h1>
+        <p>Thin Layer Chromatography — retention factor analysis</p>
+        <div class="header-actions">
+            {% if version %}<span class="version-badge">v{{ version }}</span>{% endif %}
+            <button type="button" id="theme-toggle" class="theme-toggle"
+                    data-action="toggleTheme" title="Toggle light/dark theme"
+                    aria-label="Toggle light/dark theme">
+                <svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- Image source (collapses once an image is loaded) -->
+        <div class="lab-card source-card" id="source-card">
+            <div id="source-summary" class="source-summary">
+                <span class="source-summary-text"><strong>Image:</strong> <span id="source-name">none</span></span>
+                <span class="source-summary-actions">
+                    <span class="rotation" title="Turn the photo before annotating: a quarter turn, then fine-tune until the baseline is level.">
+                        <label for="rotation-preset" class="rotation-label">Rotate</label>
+                        <select id="rotation-preset" class="rotation-control" disabled>
+                            <option value="0">0°</option>
+                            <option value="90">90°</option>
+                            <option value="180">180°</option>
+                            <option value="270">270°</option>
+                        </select>
+                        <button type="button" class="lab-btn btn-lab-outline rotation-control rotation-nudge"
+                                data-action="nudgeRotation" data-arg="-0.5"
+                                title="Fine-tune 0.5° anticlockwise" aria-label="Fine-tune 0.5 degrees anticlockwise" disabled>
+                            <svg class="icon"><use href="#i-rotate-ccw"/></svg>
+                        </button>
+                        <input id="rotation-fine" class="rotation-control" type="number" inputmode="decimal"
+                               min="-45" max="45" step="0.1" value="0.0"
+                               aria-label="Fine-tune, degrees clockwise" disabled><span class="rotation-unit">°</span>
+                        <button type="button" class="lab-btn btn-lab-outline rotation-control rotation-nudge"
+                                data-action="nudgeRotation" data-arg="0.5"
+                                title="Fine-tune 0.5° clockwise" aria-label="Fine-tune 0.5 degrees clockwise" disabled>
+                            <svg class="icon"><use href="#i-rotate-cw"/></svg>
+                        </button>
+                    </span>
+                    <button type="button" class="source-summary-change" data-action="openAnnotations"
+                            title="Open an annotation file (JSON) saved for this image.">
+                        <svg class="icon"><use href="#i-folder"/></svg> Open annotations
+                    </button>
+                    <input type="file" id="annotations-input" accept=".json,application/json" hidden>
+                    <button type="button" id="source-change" class="source-summary-change"
+                            data-action="toggleImageSource" aria-expanded="false"
+                            title="Re-open the image source panel to load a different image.">
+                        <svg class="icon"><use href="#i-chevron"/></svg> Change
+                    </button>
+                </span>
+            </div>
+            <!-- What the plate was run in: recorded with the result (shown with the summary) -->
+            <div id="plate-info" class="plate-info">
+                <label class="plate-field" title="The solvent mixture the plate was developed in. Recorded in the CSV and the annotation file; it also fills the solvent in the Rf summary.">
+                    <span>Mobile phase</span>
+                    <input type="text" id="mobile-phase" maxlength="100" placeholder="e.g. CH/EtOAc 4:1" autocomplete="off">
+                </label>
+                <label class="plate-field" title="The plate material. Recorded in the CSV and the annotation file.">
+                    <span>Stationary phase</span>
+                    <input type="text" id="stationary-phase" maxlength="100" placeholder="e.g. silica gel 60 F254" autocomplete="off">
+                </label>
+            </div>
+            <div id="source-body" class="source-body">
+                <div class="card-header"><h2 class="card-title">Image source</h2></div>
+                <div class="card-content">
+                    <div class="button-group button-group--row">
+                        <button id="eln-source-btn" class="lab-btn btn-lab-primary active flex-1"
+                                data-action="selectImageSource" data-arg="eln"
+                                title="Load the plate image attached to the ELN entry that opened this tool.">
+                            <svg class="icon"><use href="#i-cloud"/></svg> From ELN
+                        </button>
+                        <button id="local-source-btn" class="lab-btn btn-lab-outline flex-1"
+                                data-action="selectImageSource" data-arg="local"
+                                title="Upload a plate image from your computer (JPG or PNG, under 10 MB).">
+                            <svg class="icon"><use href="#i-upload"/></svg> Upload local
+                        </button>
+                    </div>
+                    <div id="local-upload-section" class="hidden">
+                        <div class="upload-area">
+                            <svg class="icon icon-lg muted"><use href="#i-cloud-up"/></svg>
+                            <h6>Upload TLC image</h6>
+                            <p>Drag &amp; drop your image here, or choose a file</p>
+                            <input type="file" id="local-image-input" accept="image/*" class="hidden">
+                            <button class="lab-btn btn-lab-primary" data-action="triggerFileInput">
+                                <svg class="icon"><use href="#i-folder"/></svg> Choose file
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annotation toolbar -->
+        <div class="toolbar" id="toolbar" role="toolbar" aria-label="Annotation tools">
+            <div class="tool-group">
+                <span class="tool-label">Bounds</span>
+                <button class="lab-btn btn-lab-secondary" data-action="selectPlateArea" title="Optional: draw a box around the plate. Suggest Lines and Suggest Spots then search only inside it, and lines and spots stay within it. Recommended for photos with a lot of background. It does not place the reference lines.">
+                    <svg class="icon"><use href="#i-region"/></svg> <span class="lbl-full">Plate Area</span><span class="lbl-short">Plate</span>
+                </button>
+                <label class="check-row" title="Zoom the work area to the plate box, with a small margin around it. View only — the saved image keeps its full dimensions.">
+                    <input type="checkbox" id="crop-plate"> <span class="lbl-full">crop view</span><span class="lbl-short">crop</span>
+                </label>
+                <span class="tool-divider" aria-hidden="true"></span>
+                <button class="lab-btn btn-lab-outline" id="min-line-btn" data-action="addMinLine" title="Mark the baseline / origin — the line where the samples were spotted.">
+                    <svg class="icon"><use href="#i-hline"/></svg> Min Line
+                </button>
+                <button class="lab-btn btn-lab-outline" id="max-line-btn" data-action="addMaxLine" title="Mark the solvent front — how far the mobile phase travelled.">
+                    <svg class="icon"><use href="#i-hline"/></svg> Max Line
+                </button>
+                <button class="lab-btn btn-lab-secondary" data-action="autoDetectLines" id="detect-lines-btn" title="Suggest the Min (baseline) and Max (solvent front) lines with the trained model TLC-LineDet. A suggestion, not a measurement: check both and drag them into place. If only one line is found, the other is an estimate, drawn dashed until you move it." disabled>
+                    <svg class="icon"><use href="#i-wand"/></svg> Suggest Lines
+                </button>
+            </div>
+            <span class="toolbar-break" aria-hidden="true"></span>
+            <div class="tool-group">
+                <span class="tool-label">Annotate</span>
+                <button class="lab-btn btn-lab-secondary" data-action="autoDetectSpots" id="detect-spots-btn" title="Suggest candidate spots with the trained model TLC-SpotDet, searching only between the Min and Max lines. It can miss faint or touching spots: review the suggestions and add any it missed." disabled>
+                    <svg class="icon"><use href="#i-wand"/></svg> Suggest Spots
+                </button>
+                <button class="lab-btn btn-lab-primary" data-action="addSpots" title="Click on the plate to place spots. Double-click (double-tap on touch) a spot to delete it.">
+                    <svg class="icon"><use href="#i-target"/></svg> <span class="lbl-full">Add Spots</span><span class="lbl-short">Spots</span>
+                </button>
+                <span class="tool-divider" aria-hidden="true"></span>
+                <button class="lab-btn btn-lab-outline" data-action="addHorizontalLine" title="Add a horizontal label line to name a zone or compound.">
+                    <svg class="icon"><use href="#i-hline"/></svg> H-Line
+                </button>
+                <button class="lab-btn btn-lab-outline" data-action="addVerticalLine" title="Add a vertical label line to name a lane.">
+                    <svg class="icon"><use href="#i-vline"/></svg> V-Line
+                </button>
+            </div>
+            <span class="toolbar-break" aria-hidden="true"></span>
+            <div class="tool-group">
+                <span class="tool-label">Labels</span>
+                <label class="num-row" for="text-scale" title="Text size on the saved image, 10–500% of the size computed from the plate's resolution. The annotated image is redrawn; no recalculation needed.">
+                    <span class="lbl-full">text size</span><span class="lbl-short">size</span>
+                    <input type="number" id="text-scale" min="10" max="500" step="10" value="100" inputmode="numeric" aria-label="Annotation text size (percent)">
+                    <span aria-hidden="true">%</span>
+                </label>
+                <label class="check-row" title="Saved image: show each spot's Rf, compound and lane next to its number. Off: numbers only, which stay readable on crowded plates; the details are in the table and CSV. The annotated image is redrawn; no recalculation needed.">
+                    <input type="checkbox" id="label-full"> <span class="lbl-full">full labels</span><span class="lbl-short">full</span>
+                </label>
+            </div>
+            <div class="tool-group tool-group--center">
+                <button id="undo-btn" class="lab-btn btn-lab-outline" data-action="undoEdit" aria-label="Undo" title="Undo the last edit (Ctrl+Z)." disabled>
+                    <svg class="icon"><use href="#i-undo"/></svg>
+                </button>
+                <button id="redo-btn" class="lab-btn btn-lab-outline" data-action="redoEdit" aria-label="Redo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)." disabled>
+                    <svg class="icon"><use href="#i-redo"/></svg>
+                </button>
+            </div>
+            <div class="tool-group tool-group--actions">
+                <button id="calculate-btn" class="lab-btn btn-lab-success" data-action="calculateRF" title="Compute RF for each spot and render the annotated image. Needs Min, Max, and at least one spot.">
+                    <svg class="icon"><use href="#i-calc"/></svg> <span class="lbl-full">Calculate RF</span><span class="lbl-short">Calculate</span>
+                </button>
+                <button class="lab-btn btn-lab-danger" data-action="resetCanvas" title="Clear all lines, spots, and results and start over.">
+                    <svg class="icon"><use href="#i-reset"/></svg> <span class="lbl-hide">Reset</span>
+                </button>
+                <button class="lab-btn btn-lab-outline" data-action="toggleHelp" aria-label="Help" title="Show the step-by-step guide.">
+                    <svg class="icon"><use href="#i-help"/></svg> <span class="lbl-hide">Help</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Contextual hint: version 1's order — lines first, then spots inside them. -->
+        <div id="hint" class="hint" role="status"></div>
+        <div id="draft-banner" class="draft-banner" role="status" hidden>
+            <span id="draft-text"></span>
+            <span class="draft-actions">
+                <button type="button" class="lab-btn btn-lab-primary" data-action="restoreDraft">Restore</button>
+                <button type="button" class="lab-btn btn-lab-outline" data-action="discardDraft">Discard</button>
+            </span>
+        </div>
+
+        <!-- Work area: canvas + result. Layout adapts to image orientation. -->
+        <div class="work-area layout-columns" id="work-area">
+            <div class="panel panel-canvas">
+                <h5 class="panel-title">Plate</h5>
+                <div id="canvas-container"><canvas id="image-canvas"></canvas></div>
+            </div>
+
+            <div class="panel panel-result">
+                <h5 class="panel-title" id="annotated-heading">Result</h5>
+                <div id="stale-banner" class="stale-banner" role="status">
+                    <svg class="icon"><use href="#i-info"/></svg>
+                    <span>Results are out of date — click <strong>Calculate RF</strong> to refresh.</span>
+                </div>
+                <div id="annotated-wrap" class="annotated-wrap">
+                    <img id="annotated-image" class="hidden" alt="Annotated result">
+                    <!-- The spot of the selected table row, over the annotated image -->
+                    <span id="annotated-ring" class="annotated-ring" hidden></span>
+                </div>
+                <p id="result-placeholder" class="muted text-sm">
+                    Set the reference lines and spots, then <strong>Calculate RF</strong> —
+                    the annotated image and values appear here.
+                </p>
+                <div class="table-scroll">
+                    <table id="values-table">
+                        <thead>
+                            <tr>
+                                <th class="col-n" title="Number shown next to the spot on the annotated image">#</th>
+                                <th>Lane (V)</th>
+                                <th class="col-lane-type">Lane type</th>
+                                <th>Compound (H)</th>
+                                <th class="col-compound-type">Compound type</th>
+                                <th class="col-rf">Rf</th>
+                                <th><span class="sr-only">Delete</span></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="export-row" id="export-row">
+                    <button type="button" class="lab-btn btn-lab-outline" data-action="saveCSV" title="Download the RF results table as a CSV file." disabled>
+                        <svg class="icon"><use href="#i-download"/></svg> CSV
+                    </button>
+                    <button type="button" class="lab-btn btn-lab-outline" data-action="saveImage" title="Download the annotated image (PNG)." disabled>
+                        <svg class="icon"><use href="#i-download"/></svg> Image
+                    </button>
+                    <button type="button" class="lab-btn btn-lab-outline" data-action="saveAnnotations" title="Download the annotations (JSON): reopen them later on the same image to check or continue the result." disabled>
+                        <svg class="icon"><use href="#i-download"/></svg> <span class="lbl-full">Annotations</span><span class="lbl-short">JSON</span>
+                    </button>
+                    <button type="button" class="lab-btn btn-lab-outline export-eln" data-action="csvToEln" title="Upload the results CSV to the ELN." disabled>
+                        <svg class="icon"><use href="#i-cloud-up"/></svg> CSV
+                    </button>
+                    <button type="button" class="lab-btn btn-lab-outline export-eln" data-action="imageToEln" title="Upload the annotated image to the ELN." disabled>
+                        <svg class="icon"><use href="#i-cloud-up"/></svg> Image
+                    </button>
+                    <button type="button" class="lab-btn btn-lab-outline export-eln" data-action="annotationsToEln" title="Upload the annotations (JSON) to the ELN." disabled>
+                        <svg class="icon"><use href="#i-cloud-up"/></svg> <span class="lbl-full">Annotations</span><span class="lbl-short">JSON</span>
+                    </button>
+                    <div class="export-extra">
+                        <button type="button" class="lab-btn btn-lab-outline" data-action="saveAll" title="Download the CSV, the annotated image and the annotations together, as one ZIP file." disabled>
+                            <svg class="icon"><use href="#i-download"/></svg> Download all
+                        </button>
+                        <button type="button" class="lab-btn btn-lab-outline" data-action="copyRfSummary" title="Copy the Rf values as one line of text, in the style of Chemotion's TLC description, to paste into the ELN." disabled>
+                            <svg class="icon"><use href="#i-copy"/></svg> Copy Rf summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help drawer -->
+    <div id="help-drawer" class="help-drawer">
+        <div class="help-card">
+            <div class="help-head">
+                <h6 class="instructions-title"><svg class="icon"><use href="#i-info"/></svg> How to analyse your plate</h6>
+                <button type="button" class="help-close" data-action="toggleHelp" aria-label="Close help">
+                    <svg class="icon"><use href="#i-close"/></svg>
+                </button>
+            </div>
+            <div id="instructions-box" class="instructions-panel">
+                <ol>
+                    <li>Load a plate image from the ELN or by uploading a local file. Optionally note the
+                        <strong>mobile phase</strong> (solvent mixture) and <strong>stationary phase</strong>
+                        (plate material); they are recorded with the result.</li>
+                    <li><strong>Optional:</strong> click <span class="highlight">Plate Area</span> and drag a
+                        box around the plate. <span class="highlight">Suggest Lines</span> and
+                        <span class="highlight">Suggest Spots</span> then ignore everything outside it, which
+                        helps a lot on photos with much background. It does not place the reference lines. While a plate area is
+                        set, lines and spots must stay inside it — drawing or redrawing the box clamps the lines
+                        to it and drops any spots that fall outside.</li>
+                    <li>Click <span class="highlight">Suggest Lines</span> to propose the
+                        <span class="highlight">Min Line</span> (baseline, where samples were spotted) and the
+                        <span class="highlight">Max Line</span> (solvent front, how far the solvent ran), or place
+                        them yourself. Drag them into place if needed. If only one line is found, the other
+                        is an estimate, drawn dashed (“Min (estimate)”) until you move it.</li>
+                    <li>Click <span class="highlight">Suggest Spots</span> — it searches only between Min and
+                        Max — or <span class="highlight">Add Spots</span> to mark spots. Review and adjust, and
+                        add any spot it missed.</li>
+                    <li>Optionally add <span class="highlight">V-Line</span> (lane) and
+                        <span class="highlight">H-Line</span> (compound) markers. Pick a type from the list, add
+                        free text, or both; click the <strong>&#x270E;</strong> beside a marker to change it later.
+                        Each spot is assigned to the nearest lane and compound marker. An unlabelled lane is left
+                        blank; an unmarked compound shows as “Unknown”.</li>
+                    <li>Click <span class="highlight">Calculate RF</span>, then export as CSV / image / annotations,
+                        all three as one ZIP (<strong>Download all</strong>), or send them to the ELN.
+                        <strong>Copy Rf summary</strong> copies the Rf values as one line of text to paste
+                        into the ELN. Clicking a table row rings its spot on both images.</li>
+                </ol>
+                <p class="muted text-sm">Drag spots or lines to reposition; double-click (or double-tap on touch) a spot to delete it.
+                    Rf runs from 0 (on the baseline) to 1 (at the solvent front); spots outside that range are
+                    left out.</p>
+                <p class="muted text-sm"><strong>Crop view</strong> zooms the work area to the plate box (with
+                    a small margin) for easier marking. It only affects what you see here — the saved image keeps its full
+                    original dimensions (including any rotation).</p>
+                <p class="muted text-sm">Results are <strong>numbered</strong>: the number beside each spot on
+                    the annotated image is the row number in the table and the CSV, sorted by lane label and then
+                    by Rf. Tick <strong>full labels</strong> to also print each spot's Rf, compound and lane on
+                    the image. Labels on the plate are sized from the plate's resolution, as on the saved
+                    image. <strong>Text size</strong> (10–500%) scales the text of the saved image only;
+                    changing it, or <strong>full labels</strong>, redraws the annotated image without a
+                    recalculation. Downloads are named after the image and the time of the result, e.g.
+                    <code>plate_2026-11-16_14-32_rf.csv</code>.</p>
+                <p class="muted text-sm"><strong>Rotate</strong> (before you annotate): pick a quarter turn,
+                    then fine-tune the angle (±45°; the arrows step by 0.5°) until the baseline is level —
+                    Rf compares heights, so a tilted photo gives lane-dependent errors.</p>
+                <p class="muted text-sm">Your annotations are kept in this browser as you work: loading the
+                    same photo again offers to restore them. <strong>Annotations</strong> (export) saves them
+                    as a file; <strong>Open annotations</strong> loads such a file back onto the same photo.</p>
+                <p class="muted text-sm">Suggested lines and spots are <strong>candidates</strong> from two
+                    trained models (TLC-LineDet and TLC-SpotDet). They can be wrong or miss a spot; nothing
+                    is calculated until you have reviewed them and clicked <strong>Calculate RF</strong>.</p>
+                <p class="muted text-sm">After you calculate, changing any annotation marks the results
+                    <strong>out of date</strong> — a banner appears and export is disabled until you click
+                    <strong>Calculate RF</strong> again, so you never save a stale image.</p>
+                <p class="muted text-sm"><strong>Undo / redo</strong> your edits with the toolbar buttons or
+                    <strong>Ctrl+Z</strong> / <strong>Ctrl+Y</strong> (<strong>Ctrl+Shift+Z</strong>).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line label popup -->
+    <div id="line-popup" class="popup" role="dialog" aria-labelledby="line-popup-title">
+        <div id="line-popup-title" class="popup-title">Label</div>
+        <select id="line-kind" aria-label="Type"></select>
+        <input type="text" id="line-text" placeholder="Label (optional), e.g. compound name" aria-label="Label" maxlength="100">
+        <div class="popup-actions">
+            <button class="lab-btn btn-lab-outline" data-action="cancelAnnotation">Cancel</button>
+            <button class="lab-btn btn-lab-primary" data-action="submitAnnotation">Submit</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module" src="{% static 'tlc/js/main.js' %}"></script>
+</body>
+</html>

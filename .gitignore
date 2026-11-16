@@ -1,28 +1,39 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*.egg-info/
 .venv/
 venv/
-env/
+pyvenv.cfg
 
 # Django
-*.log
 db.sqlite3
-media/
-staticfiles/
+db.sqlite3-journal
+/staticfiles/
 
-# Environment and secrets
+# User-generated / regenerable media (keep the directory, ignore contents)
+/media/*
+!/media/.gitkeep
+
+# Environment / secrets
 .env
-.env.*
-*.secret
+*.env
 
-# OS and editor files
+# Tooling
+.ruff_cache/
+.pytest_cache/
+test-results/
+
+# OS / editor
 .DS_Store
-Thumbs.db
-.vscode/
 .idea/
+.vscode/
 
-# Archives
-*.zip
+# Local reference copies of upstream ELN docs (may contain third-party PII)
+eln_related_docs/
+
+# Stray test photos pasted into the repo root
+/*.jpg
+/*.jpeg
+.coverage
+htmlcov/
